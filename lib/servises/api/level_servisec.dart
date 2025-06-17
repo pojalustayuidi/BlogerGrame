@@ -3,20 +3,21 @@ import '../models/level.dart';
 
 class LevelService {
   static final Dio _dio = Dio();
-  static const String baseUrl = 'https://cryptogame-backend-production.up.railway.app';
+  static const String baseUrl = 'https://blogergramegame-backend.onrender.com';
 
-  static Future<List<Level>> fetchLevels() async {
+  static Future<Level> fetchLevelById(int id) async {
     try {
-      final response = await _dio.get('$baseUrl/levels');
+      final response = await _dio.get('$baseUrl/levels/$id');
 
       if (response.statusCode == 200) {
-        final data = response.data as List;
-        return data.map((json) => Level.fromJson(json)).toList();
+        return Level.fromJson(response.data);
       } else {
         throw Exception('Ошибка сервера: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Ошибка при запросе: $e');
+      throw Exception('Ошибка при запросе уровня: $e');
     }
   }
-}
+
+  }
+

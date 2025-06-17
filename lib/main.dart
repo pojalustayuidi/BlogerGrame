@@ -1,3 +1,4 @@
+import 'package:blogergrame/screens/menu_screen/menu_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'BlogerGrame',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      home: const MenuScreen(),
     );
   }
 }
