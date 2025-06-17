@@ -46,7 +46,7 @@ class _LevelScreenState extends State<LevelScreen> {
         .toList();
   }
 
-  void onLetterPressed(String letter) {
+  void onLetterPressed(String letter, void Function() onLetterAccepted) {
     if (selectedIndex == null) return;
     if (selectedIndex! >= userInput.length || selectedIndex! < 0) return;
     if (revealed.contains(selectedIndex)) return;
@@ -54,7 +54,8 @@ class _LevelScreenState extends State<LevelScreen> {
     setState(() {
       userInput[selectedIndex!] = letter;
       final correctChar = widget.level.quote[selectedIndex!].toLowerCase();
-      if (letter != correctChar) {
+      final letterLower = letter.toLowerCase();
+      if (letterLower != correctChar) {
         incorrectIndices.add(selectedIndex!);
         Timer(const Duration(seconds: 1), () {
           if (mounted) {
@@ -66,7 +67,11 @@ class _LevelScreenState extends State<LevelScreen> {
         });
       } else {
         incorrectIndices.remove(selectedIndex!);
+        final number = widget.level.letterMap[correctChar];
         _updateCompletedNumbers();
+        if (number != null && completedNumbers.contains(number)) {
+          onLetterAccepted();
+        }
       }
     });
   }

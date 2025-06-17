@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class VirtualKeyboardWidget extends StatefulWidget {
-  final void Function(String) onLetterPressed;
+  final void Function(String, void Function() onLetterAccepted) onLetterPressed;
 
   const VirtualKeyboardWidget({super.key, required this.onLetterPressed});
 
@@ -20,13 +20,12 @@ class _VirtualKeyboardWidgetState extends State<VirtualKeyboardWidget> {
   final Set<String> usedLetters = {};
 
   void handlePress(String letter) {
-    if (usedLetters.contains(letter)) {
-      return;
-    }
-    setState(() {
-      usedLetters.add(letter);
+    if (usedLetters.contains(letter)) return;
+    widget.onLetterPressed(letter, () {
+      setState(() {
+        usedLetters.add(letter);
+      });
     });
-    widget.onLetterPressed(letter.toLowerCase());
   }
 
   @override
