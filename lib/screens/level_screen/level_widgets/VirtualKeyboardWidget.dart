@@ -20,7 +20,9 @@ class _VirtualKeyboardWidgetState extends State<VirtualKeyboardWidget> {
   final Set<String> usedLetters = {};
 
   void handlePress(String letter) {
-    if (usedLetters.contains(letter)) return;
+    if (usedLetters.contains(letter)) {
+      return;
+    }
     setState(() {
       usedLetters.add(letter);
     });
@@ -40,11 +42,16 @@ class _VirtualKeyboardWidgetState extends State<VirtualKeyboardWidget> {
           return ElevatedButton(
             onPressed: isUsed ? null : () => handlePress(letter),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isUsed ? Colors.grey : Colors.white,
+              backgroundColor: isUsed ? Colors.grey[400] : Colors.white,
+              foregroundColor: isUsed ? Colors.grey[600] : Colors.black,
               minimumSize: const Size(40, 40),
               padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             ),
-            child: Text(letter, style: const TextStyle(fontSize: 16)),
+            child: Text(
+              letter,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           );
         }).toList(),
       ),
