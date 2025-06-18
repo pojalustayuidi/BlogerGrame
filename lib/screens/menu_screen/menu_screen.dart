@@ -54,7 +54,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                   );
                 },
-                child: const Text('Играть', style: TextStyle(fontSize: 20)),
+                child: const Text('Начать Level 1', style: TextStyle(fontSize: 20)),
               ),
             );
           },

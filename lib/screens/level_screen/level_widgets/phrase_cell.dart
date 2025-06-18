@@ -7,6 +7,7 @@ class PhraseCell extends StatelessWidget {
   final bool isRevealed;
   final bool isSelected;
   final bool isIncorrect;
+  final bool isCorrect;
   final bool isCompleted;
   final VoidCallback onTap;
 
@@ -18,14 +19,18 @@ class PhraseCell extends StatelessWidget {
     required this.isRevealed,
     required this.isSelected,
     required this.isIncorrect,
+    required this.isCorrect,
     required this.isCompleted,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    // 💡 Даже если isRevealed — цифра пропадает, если isCompleted
+    final shouldShowNumber = number != null && !isCompleted;
+
     return GestureDetector(
-      onTap: isRevealed ? null : onTap,
+      onTap: isRevealed || isCorrect ? null : onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -57,8 +62,8 @@ class PhraseCell extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            number?.toString() ?? '',
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            shouldShowNumber ? number.toString() : '',
+            style: const TextStyle(fontSize: 18, color: Colors.grey),
           ),
         ],
       ),

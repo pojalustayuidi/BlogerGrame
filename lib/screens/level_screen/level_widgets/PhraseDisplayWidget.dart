@@ -7,6 +7,7 @@ class PhraseDisplayWidget extends StatelessWidget {
   final List<String?> userInput;
   final int? selectedIndex;
   final List<int> incorrectIndices;
+  final List<int> correctIndices;
   final List<int> completedNumbers;
   final void Function(int index) onSelect;
 
@@ -16,28 +17,29 @@ class PhraseDisplayWidget extends StatelessWidget {
     required this.userInput,
     required this.selectedIndex,
     required this.incorrectIndices,
+    required this.correctIndices,
     required this.completedNumbers,
     required this.onSelect,
   });
 
-  bool _isLetter(String char) {
-    return RegExp(r'[а-яА-ЯёЁ]').hasMatch(char);
-  }
 
   @override
   Widget build(BuildContext context) {
     final chars = level.quote.split('');
-    final List<Widget> rows = [];
-    final List<Widget> widgets = [];
+    List<Widget> lines = [];
+    List<Widget> currentLine = [];
+    List<Widget> currentWord = [];
+
     int globalIndex = 0;
 
     for (int i = 0; i < chars.length; i++) {
       final char = chars[i];
-
-      if (globalIndex >= userInput.length) break;
-
       if (char == ' ') {
-        widgets.add(const SizedBox(width: 8));
+        if (currentWord.isNotEmpty) {
+          currentLine.addAll(currentWord);
+          currentWord.clear();
+        }
+        currentLine.add(const SizedBox(width: 12));
         globalIndex++;
         continue;
       }
@@ -49,43 +51,51 @@ class PhraseDisplayWidget extends StatelessWidget {
       final value = isRevealed ? char : userInput[globalIndex];
       final cellIndex = globalIndex;
 
-      if (_isLetter(char) || isPunctuation) {
-        widgets.add(
-          PhraseCell(
-            index: cellIndex,
-            value: value,
-            number: number,
-            isRevealed: isRevealed,
-            isSelected: selectedIndex == cellIndex,
-            isIncorrect: incorrectIndices.contains(cellIndex),
-            isCompleted: completedNumbers.contains(number),
-            onTap: () => onSelect(cellIndex),
-          ),
-        );
-      }
+      final cell = PhraseCell(
+        index: cellIndex,
+        value: value,
+        number: number,
+        isRevealed: isRevealed,
+        isSelected: selectedIndex == cellIndex,
+        isIncorrect: incorrectIndices.contains(cellIndex),
+        isCorrect: correctIndices.contains(cellIndex),
+        isCompleted: completedNumbers.contains(number),
+        onTap: () => onSelect(cellIndex),
+      );
 
-      if (char == ',' || char == '.' || char == ' ' || i == chars.length - 1) {
-        rows.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: Wrap(
-              children: [...widgets],
-            ),
-          ),
-        );
-        if (char != ' ') {
-          widgets.clear();
+      currentWord.add(cell);
+
+      final isEndOfWord = i == chars.length - 1 ||
+          chars[i + 1] == ' ' ||
+          chars[i + 1] == ',' ||
+          chars[i + 1] == '.';
+
+      if (isEndOfWord) {
+        // estimate width
+        final estimatedWidth = currentLine.length + currentWord.length;
+        if (estimatedWidth > 12) {
+          lines.add(Wrap(spacing: 6, runSpacing: 6, children: currentLine));
+          currentLine = [];
         }
+        currentLine.addAll(currentWord);
+        currentWord.clear();
       }
 
       globalIndex++;
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: rows,
-      ),
+    if (currentLine.isNotEmpty) {
+      lines.add(Wrap(spacing: 6, runSpacing: 6, children: currentLine));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines
+          .map((line) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: line,
+      ))
+          .toList(),
     );
   }
 }

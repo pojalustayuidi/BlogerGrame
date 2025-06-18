@@ -1,8 +1,11 @@
+import 'package:blogergrame/screens/level_screen/level_widgets/lives_widget.dart';
+import 'package:blogergrame/screens/menu_screen/menu_screen.dart';
 import 'package:flutter/material.dart';
 import '../../servises/models/level.dart';
 import 'level_widgets/PhraseDisplayWidget.dart';
 import 'level_widgets/VirtualKeyboardWidget.dart';
 import 'dart:async';
+import 'level_widgets/level_compite_dialog.dart';
 
 class LevelScreen extends StatefulWidget {
   final Level level;
@@ -17,7 +20,10 @@ class _LevelScreenState extends State<LevelScreen> {
   List<String?> userInput = [];
   int? selectedIndex;
   List<int> incorrectIndices = [];
+  List<int> correctIndices = [];
   List<int> completedNumbers = [];
+  int lives = 5;
+  bool hasLost = false;
 
   @override
   void initState() {
@@ -34,9 +40,32 @@ class _LevelScreenState extends State<LevelScreen> {
         .where((e) => widget.level.letterMap[e.value.toLowerCase()] == number)
         .map((e) => e.key)
         .toList();
-    return indices.every((index) =>
-    userInput[index] != null &&
-        userInput[index]!.toLowerCase() == widget.level.quote[index].toLowerCase());
+
+    return indices.every((index) {
+      final correctChar = widget.level.quote[index].toLowerCase();
+      final input = userInput[index]?.toLowerCase();
+      final revealed = widget.level.revealed.contains(index);
+
+      return revealed || (input != null && input == correctChar);
+    });
+  }
+
+  void checkIfLevelCompleted() {
+    final phrase = widget.level.quote.toLowerCase();
+    final current = userInput.map((e) => (e ?? '')).join().toLowerCase();
+
+    if (phrase == current) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => LevelCompleteDialog(
+          author: widget.level.author,
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      );
+    }
   }
 
   void _updateCompletedNumbers() {
@@ -46,10 +75,33 @@ class _LevelScreenState extends State<LevelScreen> {
         .toList();
   }
 
+  void _moveToNextAvailableCell() {
+    for (int i = selectedIndex! + 1; i < userInput.length; i++) {
+      if (!revealed.contains(i) && !correctIndices.contains(i)) {
+        setState(() {
+          selectedIndex = i;
+        });
+        return;
+      }
+    }
+    for (int i = 0; i < selectedIndex!; i++) {
+      if (!revealed.contains(i) && !correctIndices.contains(i)) {
+        setState(() {
+          selectedIndex = i;
+        });
+        return;
+      }
+    }
+    setState(() {
+      selectedIndex = null;
+    });
+  }
+
   void onLetterPressed(String letter, void Function() onLetterAccepted) {
-    if (selectedIndex == null) return;
-    if (selectedIndex! >= userInput.length || selectedIndex! < 0) return;
-    if (revealed.contains(selectedIndex)) return;
+    if (selectedIndex == null ||
+        selectedIndex! >= userInput.length ||
+        revealed.contains(selectedIndex!) ||
+        correctIndices.contains(selectedIndex!)) return;
 
     setState(() {
       userInput[selectedIndex!] = letter;
@@ -57,28 +109,76 @@ class _LevelScreenState extends State<LevelScreen> {
       final letterLower = letter.toLowerCase();
       if (letterLower != correctChar) {
         incorrectIndices.add(selectedIndex!);
-        Timer(const Duration(seconds: 1), () {
-          if (mounted) {
-            setState(() {
-              userInput[selectedIndex!] = null;
-              incorrectIndices.remove(selectedIndex!);
-            });
-          }
-        });
+        lives--;
+
+        if (lives <= 0 && !hasLost) {
+          hasLost = true;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => PopScope(
+              canPop: false,
+              child: AlertDialog(
+                title: const Center(child: Text('Вы совершили 5 ошибок')),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8),
+                    const Icon(Icons.sentiment_very_dissatisfied, size: 48),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.home, size: 32),
+                          onPressed: () {
+                            Navigator.of(context).popUntil((route) => route.isFirst);
+                          },
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) => LevelScreen(level: widget.level),
+                              ),
+                            );
+                          },
+                          child: const Text('Переиграть'),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+          );
+        } else {
+          Timer(const Duration(seconds: 1), () {
+            if (mounted) {
+              setState(() {
+                userInput[selectedIndex!] = null;
+                incorrectIndices.remove(selectedIndex!);
+              });
+            }
+          });
+        }
       } else {
         incorrectIndices.remove(selectedIndex!);
+        correctIndices.add(selectedIndex!);
         final number = widget.level.letterMap[correctChar];
         _updateCompletedNumbers();
         if (number != null && completedNumbers.contains(number)) {
           onLetterAccepted();
         }
+        checkIfLevelCompleted();
+        _moveToNextAvailableCell();
       }
     });
   }
 
   void onSelectCell(int index) {
     if (index < 0 || index >= userInput.length) return;
-    if (!revealed.contains(index)) {
+    if (!revealed.contains(index) && !correctIndices.contains(index)) {
       setState(() {
         selectedIndex = (selectedIndex == index) ? null : index;
       });
@@ -90,7 +190,45 @@ class _LevelScreenState extends State<LevelScreen> {
     final level = widget.level;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Level ${level.id}')),
+      appBar: AppBar(
+        toolbarHeight: 64,
+        backgroundColor: Colors.blue,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const MenuScreen()),
+            );
+          },
+        ),
+        flexibleSpace: SafeArea(
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    LivesDisplayWidget(lives: lives),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 8,
+                top: 20,
+                child: Text(
+                  'Level ${level.id}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -102,13 +240,21 @@ class _LevelScreenState extends State<LevelScreen> {
                   userInput: userInput,
                   selectedIndex: selectedIndex,
                   incorrectIndices: incorrectIndices,
+                  correctIndices: correctIndices,
                   completedNumbers: completedNumbers,
                   onSelect: onSelectCell,
                 ),
               ),
             ),
             const Divider(),
-            VirtualKeyboardWidget(onLetterPressed: onLetterPressed),
+            VirtualKeyboardWidget(
+              onLetterPressed: onLetterPressed,
+              correctIndices: correctIndices,
+              revealed: revealed,
+              letterMap: level.letterMap,
+              userInput: userInput,
+              fullPhrase: level.quote,
+            ),
           ],
         ),
       ),
