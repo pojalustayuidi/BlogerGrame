@@ -8,8 +8,10 @@ import 'dart:async';
 import 'level_widgets/level_compite_dialog.dart';
 
 class LevelScreen extends StatefulWidget {
-  final Level level;
-  const LevelScreen({super.key, required this.level});
+  final Level currentLevel;
+  final List<Level> allLevels;
+
+  const LevelScreen({super.key, required this.currentLevel, required this.allLevels});
 
   @override
   State<LevelScreen> createState() => _LevelScreenState();
@@ -28,30 +30,30 @@ class _LevelScreenState extends State<LevelScreen> {
   @override
   void initState() {
     super.initState();
-    revealed = List<int>.from(widget.level.revealed);
-    userInput = List<String?>.filled(widget.level.quote.length, null);
+    revealed = List<int>.from(widget.currentLevel.revealed);
+    userInput = List<String?>.filled(widget.currentLevel.quote.length, null);
   }
 
   bool _isNumberCompleted(int number) {
-    final indices = widget.level.quote
+    final indices = widget.currentLevel.quote
         .split('')
         .asMap()
         .entries
-        .where((e) => widget.level.letterMap[e.value.toLowerCase()] == number)
+        .where((e) => widget.currentLevel.letterMap[e.value.toLowerCase()] == number)
         .map((e) => e.key)
         .toList();
 
     return indices.every((index) {
-      final correctChar = widget.level.quote[index].toLowerCase();
+      final correctChar = widget.currentLevel.quote[index].toLowerCase();
       final input = userInput[index]?.toLowerCase();
-      final revealed = widget.level.revealed.contains(index);
+      final revealed = widget.currentLevel.revealed.contains(index);
 
       return revealed || (input != null && input == correctChar);
     });
   }
 
   void checkIfLevelCompleted() {
-    final phrase = widget.level.quote.toLowerCase();
+    final phrase = widget.currentLevel.quote.toLowerCase();
     final current = userInput.map((e) => (e ?? '')).join().toLowerCase();
 
     if (phrase == current) {
@@ -59,7 +61,7 @@ class _LevelScreenState extends State<LevelScreen> {
         context: context,
         barrierDismissible: false,
         builder: (_) => LevelCompleteDialog(
-          author: widget.level.author,
+          author: widget.currentLevel.author,
           onClose: () {
             Navigator.of(context).pop();
           },
@@ -69,7 +71,7 @@ class _LevelScreenState extends State<LevelScreen> {
   }
 
   void _updateCompletedNumbers() {
-    final uniqueNumbers = widget.level.letterMap.values.toSet();
+    final uniqueNumbers = widget.currentLevel.letterMap.values.toSet();
     completedNumbers = uniqueNumbers
         .where((number) => _isNumberCompleted(number))
         .toList();
@@ -105,7 +107,7 @@ class _LevelScreenState extends State<LevelScreen> {
 
     setState(() {
       userInput[selectedIndex!] = letter;
-      final correctChar = widget.level.quote[selectedIndex!].toLowerCase();
+      final correctChar = widget.currentLevel.quote[selectedIndex!].toLowerCase();
       final letterLower = letter.toLowerCase();
       if (letterLower != correctChar) {
         incorrectIndices.add(selectedIndex!);
@@ -131,15 +133,17 @@ class _LevelScreenState extends State<LevelScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.home, size: 32),
-                          onPressed: () {
-                            Navigator.of(context).popUntil((route) => route.isFirst);
-                          },
-                        ),
+                        onPressed: () {
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) =>
+                                  MenuScreen(levels: widget.allLevels,
+                                      currentLevel: widget.currentLevel)));
+                        } ),
                         ElevatedButton(
                           onPressed: () {
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
-                                builder: (_) => LevelScreen(level: widget.level),
+                                builder: (_) => LevelScreen(currentLevel: widget.currentLevel, allLevels: widget.allLevels,),
                               ),
                             );
                           },
@@ -165,7 +169,7 @@ class _LevelScreenState extends State<LevelScreen> {
       } else {
         incorrectIndices.remove(selectedIndex!);
         correctIndices.add(selectedIndex!);
-        final number = widget.level.letterMap[correctChar];
+        final number = widget.currentLevel.letterMap[correctChar];
         _updateCompletedNumbers();
         if (number != null && completedNumbers.contains(number)) {
           onLetterAccepted();
@@ -187,7 +191,7 @@ class _LevelScreenState extends State<LevelScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final level = widget.level;
+    final level = widget.currentLevel;
 
     return Scaffold(
       appBar: AppBar(
@@ -197,8 +201,8 @@ class _LevelScreenState extends State<LevelScreen> {
         leading: IconButton(
           icon: const Icon(Icons.home),
           onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const MenuScreen()),
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => MenuScreen(levels: widget.allLevels, currentLevel: widget.currentLevel,)),
             );
           },
         ),

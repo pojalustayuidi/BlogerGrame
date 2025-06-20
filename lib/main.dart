@@ -1,4 +1,4 @@
-import 'package:blogergrame/screens/menu_screen/menu_screen.dart';
+import 'package:blogergrame/screens/loading_screen/loading_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -10,10 +10,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'BlogerGrame',
       debugShowCheckedModeBanner: false,
-      home: const MenuScreen(),
+      home:  LoadingScreen(),
     );
   }
 }
