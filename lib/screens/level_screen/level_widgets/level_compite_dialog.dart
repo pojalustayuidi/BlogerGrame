@@ -7,12 +7,13 @@ class LevelCompletedDialog extends StatelessWidget {
   final int levelNumber;
   final Level currentLevel;
   final List<Level> allLevels;
+  final String? formattedTime;
 
   const LevelCompletedDialog({
     super.key,
     required this.levelNumber,
     required this.currentLevel,
-    required this.allLevels,
+    required this.allLevels, this.formattedTime,
   });
 
   @override
@@ -52,17 +53,30 @@ class LevelCompletedDialog extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
                 ),
               ),
+              if (formattedTime != null) ...[
+                const SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    'Время прохождения: $formattedTime',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton.icon(
                     onPressed: () {
+                      final nextIndex = allLevels.indexOf(currentLevel) + 1;
+                      final nextLevel = (nextIndex < allLevels.length)
+                          ? allLevels[nextIndex]
+                          : currentLevel;
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (_) => MenuScreen(
                             levels: allLevels,
-                            currentLevel: currentLevel,
+                            currentLevel: nextLevel,
                           ),
                         ),
                       );

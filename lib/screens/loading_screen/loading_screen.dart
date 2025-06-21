@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../servises/models/level.dart';
+import '../../servises/api/level_servisec.dart';
 import '../../servises/player_sevice.dart';
 import '../menu_screen/menu_screen.dart';
 import 'package:dio/dio.dart';
@@ -13,6 +13,7 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen> {
   late Dio dio;
+  String? playerId;
 
   @override
   void initState() {
@@ -22,42 +23,46 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   Future<void> initializeGame() async {
-    // 1. Регистрация игрока
-    final playerId = await PlayerService.registerPlayer();
+    // Если хочешь сбросить старый playerId:
 
-    if (playerId == null) {
+    final id = await PlayerService.registerPlayer();
+
+    if (id == null) {
       showError('Не удалось зарегистрировать игрока');
       return;
     }
 
-    // 2. Получение прогресса
+    setState(() {
+      playerId = id;
+    });
+    await PlayerService.refreshLives(id);
     final currentLevelIndex = await PlayerService.getCurrentLevel();
 
-    // 3. Загрузка всех уровней
     try {
-      final response = await dio.get('https://blogergramegame-backend.onrender.com/levels');
-      final List data = response.data;
-      final levels = data.map((json) => Level.fromJson(json)).toList();
+      final levels = await LevelService.fetchAllLevels();
 
       if (levels.isEmpty) {
         showError('Нет доступных уровней');
         return;
       }
 
-      // 4. Переход на MenuScreen
-      final levelIndex = currentLevelIndex ?? 0;
-      final startingLevel = levels[levelIndex.clamp(0, levels.length - 1)];
+      final levelIndex = (currentLevelIndex ?? 0).clamp(0, levels.length - 1);
+      final startingLevel = levels[levelIndex];
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => MenuScreen(levels: levels, currentLevel: startingLevel,),
+          builder: (_) => MenuScreen(
+            levels: levels,
+            currentLevel: startingLevel,
+          ),
         ),
       );
     } catch (e) {
       showError('Ошибка при загрузке уровней: $e');
     }
   }
+
 
   void showError(String message) {
     showDialog(
@@ -77,9 +82,17 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            if (playerId != null)
+              Text('ID игрока: $playerId', style: const TextStyle(fontSize: 16)),
+          ],
+        ),
       ),
     );
   }

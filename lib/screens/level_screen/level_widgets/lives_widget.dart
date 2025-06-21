@@ -22,7 +22,7 @@ class LivesDisplayWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(5, (index) {
             return Icon(
-              Icons.favorite,
+              Icons.close,
               size: 16,
               color: index < lives ? Colors.red : Colors.grey,
             );
