@@ -53,22 +53,48 @@ class _LevelScreenState extends State<LevelScreen> {
   }
 
   void checkIfLevelCompleted() {
-    final phrase = widget.currentLevel.quote.toLowerCase();
-    final current = userInput.map((e) => (e ?? '')).join().toLowerCase();
+    final phrase = widget.currentLevel.quote;
+    final revealed = widget.currentLevel.revealed;
+    final input = userInput;
 
-    if (phrase == current) {
+    final buffer = StringBuffer();
+    final expectedBuffer = StringBuffer();
+
+    for (int i = 0; i < phrase.length; i++) {
+      final char = phrase[i];
+
+      if (char == ' ') continue; // игнорируем пробелы
+
+      expectedBuffer.write(char.toLowerCase());
+
+      if (revealed.contains(i)) {
+        buffer.write(char.toLowerCase());
+      } else {
+        final userChar = input[i];
+        if (userChar == null || userChar.isEmpty) return;
+        buffer.write(userChar.toLowerCase());
+      }
+    }
+
+    final expected = expectedBuffer.toString();
+    final actual = buffer.toString();
+
+
+    if (expected == actual) {
       showDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (_) => LevelCompleteDialog(
-          author: widget.currentLevel.author,
-          onClose: () {
-            Navigator.of(context).pop();
-          },
-        ),
+        barrierDismissible: false, // нельзя закрыть тапом вне диалога
+        builder: (context) {
+          return LevelCompletedDialog(
+            levelNumber: widget.currentLevel.id, currentLevel: widget.currentLevel, allLevels: widget.allLevels // передаём номер уровня
+          );
+        },
       );
     }
   }
+  
+
+
 
   void _updateCompletedNumbers() {
     final uniqueNumbers = widget.currentLevel.letterMap.values.toSet();
@@ -193,75 +219,85 @@ class _LevelScreenState extends State<LevelScreen> {
   Widget build(BuildContext context) {
     final level = widget.currentLevel;
 
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 64,
-        backgroundColor: Colors.blue,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.home),
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => MenuScreen(levels: widget.allLevels, currentLevel: widget.currentLevel,)),
-            );
-          },
-        ),
-        flexibleSpace: SafeArea(
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    LivesDisplayWidget(lives: lives),
-                  ],
-                ),
-              ),
-              Positioned(
-                right: 8,
-                top: 20,
-                child: Text(
-                  'Level ${level.id}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 64,
+          backgroundColor: Colors.blue,
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => MenuScreen(
+                    levels: widget.allLevels,
+                    currentLevel: widget.currentLevel,
                   ),
                 ),
+              );
+            },
+          ),
+          flexibleSpace: SafeArea(
+            child: Stack(
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      LivesDisplayWidget(lives: lives),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  right: 8,
+                  top: 20,
+                  child: Text(
+                    'Level ${level.id}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: PhraseDisplayWidget(
+                    level: level,
+                    userInput: userInput,
+                    selectedIndex: selectedIndex,
+                    incorrectIndices: incorrectIndices,
+                    correctIndices: correctIndices,
+                    completedNumbers: completedNumbers,
+                    onSelect: onSelectCell,
+                  ),
+                ),
+              ),
+              const Divider(),
+              VirtualKeyboardWidget(
+                onLetterPressed: onLetterPressed,
+                correctIndices: correctIndices,
+                revealed: revealed,
+                letterMap: level.letterMap,
+                userInput: userInput,
+                fullPhrase: level.quote,
               ),
             ],
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: PhraseDisplayWidget(
-                  level: level,
-                  userInput: userInput,
-                  selectedIndex: selectedIndex,
-                  incorrectIndices: incorrectIndices,
-                  correctIndices: correctIndices,
-                  completedNumbers: completedNumbers,
-                  onSelect: onSelectCell,
-                ),
-              ),
-            ),
-            const Divider(),
-            VirtualKeyboardWidget(
-              onLetterPressed: onLetterPressed,
-              correctIndices: correctIndices,
-              revealed: revealed,
-              letterMap: level.letterMap,
-              userInput: userInput,
-              fullPhrase: level.quote,
-            ),
-          ],
-        ),
-      ),
     );
+
   }
 }
+

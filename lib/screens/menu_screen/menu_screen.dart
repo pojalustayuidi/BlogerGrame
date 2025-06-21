@@ -14,62 +14,80 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Меню'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              'Добро пожаловать!',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => LevelScreen(
-                      currentLevel: currentLevel,
-                      allLevels: levels,
-                    ),
-                  ),
-                );
-              },
-              child: Text('Продолжить с  ${currentLevel.id} уровня'),
-            ),
-            const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: levels.length,
-                itemBuilder: (context, index) {
-                  final level = levels[index];
-                  return ListTile(
-                    title: Text('Level ${level.id}'),
-                    subtitle: Text(level.quote),
-                    trailing: const Icon(Icons.play_arrow),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => LevelScreen(
-                            currentLevel: level,
-                            allLevels: levels,
-                          ),
+    return PopScope(
+      canPop: false, // запрет на выход по "назад"
+      child: SafeArea(
+        child: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 32),
+                Text(
+                  'Добро пожаловать!',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text('Продолжить с ${currentLevel.id} уровня'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LevelScreen(
+                          currentLevel: currentLevel,
+                          allLevels: levels,
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.shopping_cart),
+                  label: const Text('Магазин'),
+                  onPressed: () {
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.settings),
+                  label: const Text('Настройки'),
+                  onPressed: () {
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+
+                const Spacer(),
+                const Text(
+                  'Версия 1.0.0',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
