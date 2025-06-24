@@ -3,7 +3,8 @@ class Level {
   final String quote;
   final String author;
   final List<int> revealed;
-  final Map<String, int> letterMap; // 👈 Ключ - строка
+  final Map<String, int> letterMap;
+  final int reward;
 
   Level({
     required this.id,
@@ -11,6 +12,7 @@ class Level {
     required this.author,
     required this.revealed,
     required this.letterMap,
+    required this.reward,
   });
 
   factory Level.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Level {
       author: json['author'],
       revealed: List<int>.from(json['revealed']),
       letterMap: Map<String, int>.from(json['letterMap']),
+      reward: json['reward'] ??  0,
     );
   }
 }

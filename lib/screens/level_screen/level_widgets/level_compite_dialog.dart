@@ -8,12 +8,19 @@ class LevelCompletedDialog extends StatelessWidget {
   final Level currentLevel;
   final List<Level> allLevels;
   final String? formattedTime;
+  final int rewards;
+  final int coinsAdded;
+  final int newcoins;
 
   const LevelCompletedDialog({
     super.key,
     required this.levelNumber,
     required this.currentLevel,
-    required this.allLevels, this.formattedTime,
+    required this.allLevels,
+    this.formattedTime,
+    required this.rewards,
+    required this.coinsAdded,
+    required this.newcoins,
   });
 
   @override
@@ -50,7 +57,8 @@ class LevelCompletedDialog extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Text(
                   '- ${currentLevel.author}',
-                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                  style: const TextStyle(
+                      fontSize: 16, fontStyle: FontStyle.italic),
                 ),
               ),
               if (formattedTime != null) ...[
@@ -58,11 +66,13 @@ class LevelCompletedDialog extends StatelessWidget {
                 Center(
                   child: Text(
                     'Время прохождения: $formattedTime',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
               const SizedBox(height: 24),
+              Text('Награда $rewards'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

@@ -1,9 +1,10 @@
+import 'package:blogergrame/screens/store_screen/shop_widgets/shop_item_card.dart';
 import 'package:flutter/material.dart';
 import '../../servises/player_sevice.dart';
 import '../../servises/shop_service.dart';
 
 class ShopScreen extends StatefulWidget {
-  const ShopScreen({Key? key}) : super(key: key);
+  const ShopScreen({super.key});
 
   @override
   State<ShopScreen> createState() => _ShopScreenState();
@@ -48,19 +49,24 @@ class _ShopScreenState extends State<ShopScreen> {
     }
   }
 
-
-
   void _showMessage(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Widget _buildItemIcon(String type) {
-    if (type == 'hint') {
-      return Icon(Icons.lightbulb_outline, color: Colors.orange);
-    } else if (type == 'life') {
-      return Icon(Icons.favorite, color: Colors.red);
-    }
-    return Icon(Icons.extension);
+  void _showDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Упс!'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('ОК'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -70,48 +76,87 @@ class _ShopScreenState extends State<ShopScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Магазин')),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.monetization_on, color: Colors.amber, size: 28),
-                const SizedBox(width: 6),
-                Text('$_playerPoints', style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: 24),
-                Icon(Icons.favorite, color: Colors.red, size: 28),
-                const SizedBox(width: 6),
-                Text('$_playerLives', style: const TextStyle(fontSize: 18)),
-              ],
+          Positioned.fill(
+            child: Image.asset(
+              'assets/backgoround_shop.png',
+              fit: BoxFit.cover,
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _items.length,
-              itemBuilder: (_, index) {
-                final item = _items[index];
-                final canAfford = _playerPoints >= item['cost'];
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: _buildItemIcon(item['type']),
-                    title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(item['description']),
-                    trailing: ElevatedButton(
-                      onPressed: canAfford ? () => _buyItem(item['id'], item['cost']) : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: canAfford ? null : Colors.grey,
-                      ),
-                      child: Text('Купить (${item['cost']})'),
-                    ),
+          Column(
+            children: [
+              AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: const Text(
+                  'НАЗАД В ГЛАВНОЕ МЕНЮ',
+                  style: TextStyle(
+                    fontFamily: 'Franklin',
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFDF0DC),
+                    fontSize: 26,
                   ),
-                );
-              },
-            ),
+                ),
+                centerTitle: true,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.favorite, color: Colors.red, size: 42),
+                    const SizedBox(width: 6),
+                    Text('$_playerLives' '/5',
+                        style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'baloo')),
+                    const SizedBox(
+                      width: 100,
+                    ),
+                    Image.asset('assets/coins.png', ),
+                    const SizedBox(width: 6),
+                    Text('$_playerPoints',
+                        style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'baloo')),
+                    const SizedBox(width: 25),
+                  ],
+                ),
+              ),
+              const Column(
+                children: [
+                  Text(
+                    'МАГАЗИН',
+                    style: TextStyle(
+                      fontFamily: 'Franklin',
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFFDF0DC),
+                      fontSize: 32,
+                    ),
+                  )
+                ],
+              ),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  childAspectRatio: 0.9,
+                  children: _items.map((item) {
+                    return ShopItemCard(
+                      item: item,
+                      playerPoints: _playerPoints,
+                      onBuy: () => _buyItem(item['id'], item['cost']),
+                      onInsufficientFunds: () =>
+                          _showDialog('Недостаточно монет'),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
         ],
       ),

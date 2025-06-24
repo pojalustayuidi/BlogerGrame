@@ -53,20 +53,25 @@ class PlayerService {
     }
   }
 
-  static Future<bool> updateProgress(int levelId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final playerId = prefs.getString('playerId');
-    if (playerId == null) {
-      print('Нет playerId для обновления прогресса');
-      return false;
-    }
+  static Future<Map<String, dynamic>?> updateProgress(int levelId, int reward) async {
     try {
-      final response = await _dio.post('$baseUrl/progress', data: {'playerId': playerId, 'levelId': levelId});
-      print('Прогресс обновлён: ${response.data}');
-      return response.statusCode == 200;
+      final prefs = await SharedPreferences.getInstance();
+      final playerId = prefs.getString('playerId');
+      if (playerId == null) return null;
+
+      final response = await _dio.post(
+        '$baseUrl/$playerId/update-progress',
+        data: {'levelId': levelId, 'reward': reward},
+      );
+
+      return {
+        'success': response.statusCode == 200,
+        'coinsAdded': response.data['coinsAdded'] ?? reward,
+        'newCoins': response.data['newCoins'] ?? 0,
+      };
     } catch (e) {
-      print('Ошибка при обновлении прогресса: $e');
-      return false;
+      print('Error updating progress: $e');
+      return null;
     }
   }
 

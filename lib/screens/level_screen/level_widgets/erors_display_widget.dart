@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class LivesDisplayWidget extends StatelessWidget {
-  final int lives;
+class ErorsDisplayWidget extends StatelessWidget {
+  final int errorCount;
 
-  const LivesDisplayWidget({super.key, required this.lives});
+  const ErorsDisplayWidget({super.key, required this.errorCount});
 
   @override
   Widget build(BuildContext context) {
@@ -13,18 +13,17 @@ class LivesDisplayWidget extends StatelessWidget {
         const Text(
           'Ошибки',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 24,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 2),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(5, (index) {
             return Icon(
-              Icons.close,
-              size: 16,
-              color: index < lives ? Colors.red : Colors.grey,
+              Icons.close_sharp,
+              size: 28,
+              color: index < errorCount ? Colors.red : Colors.grey,
             );
           }),
         ),

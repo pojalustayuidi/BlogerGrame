@@ -1,3 +1,4 @@
+import 'package:blogergrame/screens/menu_screen/menu_widgets/topbar_ui_wdiget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
@@ -5,6 +6,8 @@ import '../../servises/models/level.dart';
 import '../../servises/player_sevice.dart';
 import '../level_screen/level_screen.dart';
 import '../store_screen/shope_screen.dart';
+import 'menu_widgets/buttons.dart';
+
 
 class MenuScreen extends StatefulWidget {
   final List<Level> levels;
@@ -21,7 +24,7 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  static const int maxLives = 5;
+  static const int maxLives = 5; // Исправлено с 1 на 5
   static const int restoreIntervalSeconds = 15 * 60; // 15 минут
 
   int lives = 0;
@@ -34,6 +37,7 @@ class _MenuScreenState extends State<MenuScreen> {
   bool _isLoadingStatus = false;
 
   String formatDuration(Duration duration) {
+    if (duration <= Duration.zero) return '00:00';
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
@@ -68,9 +72,7 @@ class _MenuScreenState extends State<MenuScreen> {
         DateTime? parsedLastLifeUpdate;
 
         if (lastLifeRaw is String && lastLifeRaw.isNotEmpty) {
-          parsedLastLifeUpdate = DateTime.tryParse(lastLifeRaw)?.toUtc();
-        } else {
-          print('Предупреждение: last_life_update отсутствует или некорректно');
+          parsedLastLifeUpdate = DateTime.tryParse(lastLifeRaw)?.toLocal();
         }
 
         if (mounted) {
@@ -82,7 +84,7 @@ class _MenuScreenState extends State<MenuScreen> {
             error = false;
           });
         }
-        print('Статус загружен: lives=$lives, coins=$coins, lastLifeUpdate=$lastLifeUpdate');
+        await _refreshLives(); // Вызываем сразу, чтобы синхронизировать время
       } else {
         if (mounted) {
           setState(() {
@@ -92,7 +94,6 @@ class _MenuScreenState extends State<MenuScreen> {
             coins = 0;
           });
         }
-        print('Статус не загружен: сервер недоступен или нет playerId');
       }
     } catch (e) {
       print('Ошибка загрузки статуса: $e');
@@ -120,23 +121,26 @@ class _MenuScreenState extends State<MenuScreen> {
     try {
       final response = await PlayerService.refreshLives(playerId);
       if (response != null) {
-        if (response.containsKey('minutesToNextLife')) {
-          final minutesToNextLife = response['minutesToNextLife'] as int;
-          if (mounted) {
-            setState(() {
-              timeUntilNextLife = Duration(minutes: minutesToNextLife);
-              lives = response['lives'] ?? lives;
-              error = false;
-            });
-          }
-          print('Осталось минут до восстановления: $minutesToNextLife');
-        } else {
-          print('Жизни успешно восстановлены на сервере');
-          await _loadStatus();
+        final secondsToNextLife = response['secondsToNextLife'] as int?;
+        final lastLifeRaw = response['lastLifeUpdate'] as String?;
+        DateTime? parsedLastLifeUpdate;
+
+        if (lastLifeRaw != null && lastLifeRaw.isNotEmpty) {
+          parsedLastLifeUpdate = DateTime.tryParse(lastLifeRaw)?.toLocal();
+        }
+
+        if (mounted) {
+          setState(() {
+            lives = response['lives'] ?? lives;
+            timeUntilNextLife = secondsToNextLife != null
+                ? Duration(seconds: secondsToNextLife)
+                : Duration.zero;
+            lastLifeUpdate = parsedLastLifeUpdate ?? lastLifeUpdate;
+            error = false;
+          });
         }
       } else {
         if (mounted) setState(() => error = true);
-        print('Ошибка: /refresh-lives вернул null');
       }
     } catch (e) {
       print('Ошибка при восстановлении жизней: $e');
@@ -152,12 +156,11 @@ class _MenuScreenState extends State<MenuScreen> {
       return;
     }
 
-    final now = DateTime.now().toUtc();
+    final now = DateTime.now().toLocal();
     final elapsedSeconds = now.difference(lastLifeUpdate!).inSeconds;
-    final secondsLeft = restoreIntervalSeconds - elapsedSeconds;
+    final secondsLeft = restoreIntervalSeconds - (elapsedSeconds % restoreIntervalSeconds);
 
     if (secondsLeft <= 0 && !_isLoadingStatus) {
-      print('Время для восстановления жизни истекло, вызываем refreshLives');
       _refreshLives();
     } else if (secondsLeft > 0 && mounted) {
       final newDuration = Duration(seconds: secondsLeft);
@@ -172,7 +175,8 @@ class _MenuScreenState extends State<MenuScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Жизни закончились'),
-        content: const Text('У вас закончились жизни. Дождитесь восстановления или купите жизни в магазине.'),
+        content: const Text(
+            'У вас закончились жизни. Дождитесь восстановления или купите жизни в магазине.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -193,24 +197,23 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  void _showErrorDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Ошибка сети'),
-        content: const Text('Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _loadStatus();
-            },
-            child: const Text('Повторить'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showErrorDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //         title: const Text('Ошибка сети'),
+  //         content: const Text(
+  //             'Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.'),
+  //         actions: [
+  //         TextButton(
+  //         onPressed: () {
+  //   Navigator.pop(context);
+  //   _loadStatus();
+  //   },
+  //     child: const Text('Повторить'),
+  //   ),
+  //   ]);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -222,125 +225,55 @@ class _MenuScreenState extends State<MenuScreen> {
               ? const Center(child: CircularProgressIndicator())
               : error
               ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Ошибка загрузки данных',
-                  style: TextStyle(fontSize: 18, color: Colors.red),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loadStatus,
-                  child: const Text('Попробовать снова'),
-                ),
-              ],
+            child: ElevatedButton(
+              onPressed: _loadStatus,
+              child: const Text('Попробовать снова'),
             ),
           )
-              : Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        ...List.generate(
-                          maxLives,
-                              (index) => Icon(
-                            Icons.favorite,
-                            color: index < lives ? Colors.red : Colors.grey.shade400,
-                          ),
-                        ),
-                        if (lives < maxLives && timeUntilNextLife > Duration.zero)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text(
-                              '${formatDuration(timeUntilNextLife)}',
-                              style: const TextStyle(color: Colors.black, fontSize: 14),
-                            ),
-                          ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const Icon(Icons.monetization_on, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text(coins.toString(), style: const TextStyle(fontSize: 18)),
-                      ],
-                    ),
-                  ],
+              : Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: TopBar(
+                  lives: lives,
+                  coins: coins,
+                  maxLives: maxLives,
+                  timeUntilNextLife: timeUntilNextLife,
                 ),
-                const SizedBox(height: 32),
-                Text(
-                  'Добро пожаловать!',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text('Продолжить с ${widget.currentLevel.id} уровня'),
-                  onPressed: lives > 0
-                      ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => LevelScreen(
-                          currentLevel: widget.currentLevel,
-                          allLevels: widget.levels,
-                        ),
+              ),
+              const SizedBox(height: 50),
+              Buttons(
+                lives: lives,
+                currentLevel: widget.currentLevel,
+                levels: widget.levels,
+                onPressedContinue: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LevelScreen(
+                        currentLevel: widget.currentLevel,
+                        allLevels: widget.levels,
                       ),
-                    ).then((_) => _loadStatus());
-                  }
-                      : _showNoLivesDialog,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 18),
-                    backgroundColor: lives > 0 ? null : Colors.grey.shade400,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.shopping_cart),
-                  label: const Text('Магазин'),
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ShopScreen()),
-                    );
-                    await _loadStatus();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.settings),
-                  label: const Text('Настройки'),
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-                const Spacer(),
-                const Text(
+                    ),
+                  ).then((_) => _loadStatus());
+                },
+                showNoLivesDialog: _showNoLivesDialog,
+                loadStatus: _loadStatus,
+              ),
+              const Spacer(flex: 1),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text(
                   'Версия 1.0.0',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                const SizedBox(height: 8),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+//test_background_menu
