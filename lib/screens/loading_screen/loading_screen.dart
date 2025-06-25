@@ -23,7 +23,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   Future<void> initializeGame() async {
-    // Если хочешь сбросить старый playerId:
 
     final id = await PlayerService.registerPlayer();
 

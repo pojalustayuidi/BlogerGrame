@@ -89,16 +89,29 @@ class _ShopScreenState extends State<ShopScreen> {
               AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: const Text(
-                  'НАЗАД В ГЛАВНОЕ МЕНЮ',
-                  style: TextStyle(
-                    fontFamily: 'Franklin',
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFFDF0DC),
-                    fontSize: 26,
-                  ),
+                title: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final fontSize = screenWidth * 0.06;
+                    const maxFontSize = 26.0;
+                    const minFontSize = 16.0;
+
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'НАЗАД В ГЛАВНОЕ МЕНЮ',
+                        style: TextStyle(
+                          fontFamily: 'Franklin',
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFFDF0DC),
+                          fontSize: fontSize.clamp(minFontSize, maxFontSize),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 centerTitle: true,
+                toolbarHeight: kToolbarHeight * 1.2,
               ),
               Padding(
                 padding: const EdgeInsets.all(16),

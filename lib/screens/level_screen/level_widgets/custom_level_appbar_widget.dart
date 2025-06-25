@@ -48,7 +48,6 @@ class CustomLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Домой
               GestureDetector(
                 onTap: () async {
                   await PlayerService.updateProgress(currentLevel.id, 0);

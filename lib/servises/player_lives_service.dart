@@ -13,7 +13,6 @@ class PlayerLivesService {
 
 
   Future<void> decrementLives() async {
-    // Получаем текущие жизни
     final currentLives = await getLives();
     if (currentLives > 0) {
       await dio.post('/player/$playerId/update', data: {'lives': currentLives - 1});

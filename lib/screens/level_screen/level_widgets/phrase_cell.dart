@@ -26,7 +26,6 @@ class PhraseCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 💡 Даже если isRevealed — цифра пропадает, если isCompleted
     final shouldShowNumber = number != null && !isCompleted;
 
     return GestureDetector(

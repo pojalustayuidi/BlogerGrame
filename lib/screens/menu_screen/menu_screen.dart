@@ -24,8 +24,8 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  static const int maxLives = 5; // Исправлено с 1 на 5
-  static const int restoreIntervalSeconds = 15 * 60; // 15 минут
+  static const int maxLives = 5;
+  static const int restoreIntervalSeconds = 15 * 60;
 
   int lives = 0;
   int coins = 0;
@@ -276,4 +276,3 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 }
-//test_background_menu

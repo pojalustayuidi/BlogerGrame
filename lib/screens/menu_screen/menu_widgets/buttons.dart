@@ -104,7 +104,6 @@ class Buttons extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 32),
-        // Кнопка "Настройки"
         SizedBox(
           width: screenWidth * 0.75,
           height: screenHeight * 0.1,

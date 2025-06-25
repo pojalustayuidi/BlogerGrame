@@ -54,6 +54,74 @@ class VirtualKeyboardWidget extends StatelessWidget {
         (userInput[index]?.toLowerCase() == fullPhrase[index].toLowerCase()));
   }
 
+  Widget buildRow(List<String> rowLetters) {
+    return Expanded(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableWidth = constraints.maxWidth;
+          final buttonWidth = (availableWidth / rowLetters.length) - 4;
+          final buttonHeight = buttonWidth * 1.5;
+
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: rowLetters.map((letter) {
+                final lower = letter.toLowerCase();
+                final completed = isLetterCompleted(lower);
+                final used = isLetterUsed(lower);
+
+                Color bgColor;
+                Color fgColor;
+
+                if (completed) {
+                  bgColor = Colors.grey[400]!;
+                  fgColor = Colors.grey[700]!;
+                } else if (used) {
+                  bgColor = Colors.green[300]!;
+                  fgColor = Colors.black;
+                } else {
+                  bgColor = Colors.white;
+                  fgColor = Colors.black;
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: SizedBox(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    child: ElevatedButton(
+                      onPressed: completed ? null : () => onLetterPressed(letter, () {}),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: bgColor,
+                        foregroundColor: fgColor,
+                        padding: EdgeInsets.zero,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          letter,
+                          style: TextStyle(
+                            fontSize: buttonWidth * 0.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -62,60 +130,6 @@ class VirtualKeyboardWidget extends StatelessWidget {
     const row1 = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й'];
     const row2 = ['К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф'];
     const row3 = ['Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'];
-
-    Widget buildRow(List<String> rowLetters) {
-      return Expanded(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: rowLetters.map((letter) {
-            final lower = letter.toLowerCase();
-            final completed = isLetterCompleted(lower);
-            final used = isLetterUsed(lower);
-
-            Color bgColor;
-            Color fgColor;
-
-            if (completed) {
-              bgColor = Colors.grey[400]!;
-              fgColor = Colors.grey[700]!;
-            } else if (used) {
-              bgColor = Colors.green[300]!;
-              fgColor = Colors.black;
-            } else {
-              bgColor = Colors.white;
-              fgColor = Colors.black;
-            }
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: SizedBox(
-                width: 32,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: completed ? null : () => onLetterPressed(letter, () {}),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: bgColor,
-                    foregroundColor: fgColor,
-                    padding: EdgeInsets.zero,
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    letter,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      );
-    }
 
     return Container(
       height: keyboardHeight,

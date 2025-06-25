@@ -26,7 +26,7 @@ class LevelCompletedDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // блокируем кнопку "Назад"
+      canPop: false,
       child: Dialog(
         insetPadding: const EdgeInsets.all(24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -108,7 +108,6 @@ class LevelCompletedDialog extends StatelessWidget {
                           ),
                         );
                       } else {
-                        // если это последний уровень — вернуться в меню
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (_) => MenuScreen(
