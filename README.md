@@ -1,16 +1,14 @@
-# blogergrame
+# 🎮 BloggeGrame MobileGame 
+![ava4](https://github.com/user-attachments/assets/d7669e56-d0f4-4a74-ae15-2e604f00a5d8)
+## Описание
+БлогерГрам: Угадай цитату" - это игра-головоломка, где вам предстоит расшифровывать известные цитаты.
+На данный момент доступно:
+- 8 уникальных уровней
+- Можно узнать за сколько времени прошел уровень
+- Система попопнения и отнимание жизней
+- Магазин (покупка жизней и подсказок за монеты)
 
-A new Flutter project.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Скриншоты игры
+![3](https://github.com/user-attachments/assets/44390b05-be7c-44db-8da8-004cd39c6d8b)
+![4](https://github.com/user-attachments/assets/51ac7b41-126d-425c-9987-8e36604c1223)
