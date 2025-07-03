@@ -45,6 +45,32 @@ class PlayerService {
     }
   }
 
+  static Future<Map<String, int>?> getPlayerStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    final playerId = prefs.getString('playerId');
+    if (playerId == null) return null;
+
+    try {
+      final response = await _dio.get('$baseUrl/$playerId');
+      if (response.statusCode == 200) {
+        List<dynamic> progressList = response.data['progress'] ?? [];
+        int completedLevels = progressList.length;
+        int totalLevels = 8; // Можно сделать динамическим
+
+        return {
+          'completedLevels': completedLevels,
+          'totalLevels': totalLevels,
+          'coins': response.data['coins'] ?? 0,
+          'hints': response.data['hints'] ?? 0,
+          'lives': response.data['lives'] ?? 0,
+        };
+      }
+    } catch (e) {
+      print('Ошибка при получении статистики: $e');
+    }
+    return null;
+  }
+
   static Future<Map<String, dynamic>?> updateProgress(int levelId, int reward) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -62,6 +88,37 @@ class PlayerService {
         'newCoins': response.data['newCoins'] ?? 0,
       };
     } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> useHint({
+    required int levelId,
+    required int letterIndex,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final playerId = prefs.getString('playerId');
+    if (playerId == null) return null;
+
+    try {
+      final response = await _dio.post(
+        '$baseUrl/$playerId/use-hint',
+        data: {
+          'levelId': levelId,
+          'letterIndex': letterIndex,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'hints': response.data['hints'],
+          'revealedIndices': List<int>.from(response.data['revealedIndices'] ?? []),
+        };
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Ошибка использования подсказки: $e');
       return null;
     }
   }
@@ -141,8 +198,30 @@ class PlayerService {
     }
   }
 
+  static Future<bool> restoreHints(int amount, int cost) async {
+    final prefs = await SharedPreferences.getInstance();
+    final playerId = prefs.getString('playerId');
+    if (playerId == null) return false;
+
+    try {
+      final response = await _dio.post(
+        '$baseUrl/$playerId/restore-hints',
+        data: {'amount': amount, 'cost': cost},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Ошибка восстановления подсказок: $e');
+      return false;
+    }
+  }
+
   static Future<void> clearPlayerId() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('playerId');
+  }
+
+  static Future<String> getCurrentPlayerId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('playerId') ?? '';
   }
 }

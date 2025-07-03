@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-class TopBar extends StatelessWidget {
+class TopBar extends StatefulWidget {
   final int lives;
   final int coins;
   final int maxLives;
   final Duration timeUntilNextLife;
-
   const TopBar({
     super.key,
     required this.lives,
@@ -14,6 +13,11 @@ class TopBar extends StatelessWidget {
     required this.timeUntilNextLife,
   });
 
+  @override
+  State<TopBar> createState() => _TopBarState();
+}
+
+class _TopBarState extends State<TopBar> {
   String formatDuration(Duration duration) {
     if (duration <= Duration.zero) return '00:00';
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -58,22 +62,26 @@ class TopBar extends StatelessWidget {
                     padding: EdgeInsets.only(right: screenWidth * 0.01),
                     child: Icon(
                       Icons.favorite,
-                      color: lives >= 1 ? Colors.red : Colors.grey.shade400,
+                      color:
+                          widget.lives >= 1 ? Colors.red : Colors.grey.shade400,
                       size: 24,
                     ),
                   ),
+
+                  SizedBox(width: 11,),
+
                   Text(
-                    '$lives/5',
+                    '${widget.lives}/5',
                     style: const TextStyle(fontSize: 24, fontFamily: 'baloo'),
                   ),
-                  SizedBox(width: screenWidth * 0.37),
+                  SizedBox(width: screenWidth * 0.21),
                   Image.asset(
                     'assets/coins.png',
                     width: 24,
                     height: 24,
                   ),
                   Text(
-                    ' $coins',
+                    ' ${widget.coins}',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w500,
@@ -82,11 +90,11 @@ class TopBar extends StatelessWidget {
                   ),
                 ],
               ),
-              if (lives < 5 && timeUntilNextLife > Duration.zero)
+              if (widget.lives < 5 && widget.timeUntilNextLife > Duration.zero)
                 Padding(
                   padding: EdgeInsets.only(top: 1.0, left: screenWidth * 0.05),
                   child: Text(
-                    formatDuration(timeUntilNextLife),
+                    formatDuration(widget.timeUntilNextLife),
                     style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 18,

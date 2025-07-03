@@ -1,4 +1,5 @@
 import 'package:blogergrame/screens/level_screen/level_widgets/custom_level_appbar_widget.dart';
+import 'package:blogergrame/screens/level_screen/level_widgets/hint_counter_widget.dart';
 import 'package:blogergrame/screens/menu_screen/menu_screen.dart';
 import 'package:flutter/material.dart';
 import '../../servises/models/level.dart';
@@ -12,7 +13,7 @@ class LevelScreen extends StatefulWidget {
   final Level currentLevel;
   final List<Level> allLevels;
 
-  const LevelScreen(
+   const LevelScreen(
       {super.key, required this.currentLevel, required this.allLevels});
 
   @override
@@ -20,6 +21,7 @@ class LevelScreen extends StatefulWidget {
 }
 
 class _LevelScreenState extends State<LevelScreen> {
+  final GlobalKey<HintCounterWidgetState> _hintKey = GlobalKey();
   DateTime? _startTime;
   late List<int> revealed;
   late List<String?> userInput;
@@ -32,7 +34,29 @@ class _LevelScreenState extends State<LevelScreen> {
   bool hasLost = false;
   bool _isSavingProgress = false;
   bool _isProcessingLoss = false;
+  Future<void> _useHint() async {
+    if (selectedIndex == null) return;
 
+    final result = await PlayerService.useHint(
+      levelId: widget.currentLevel.id,
+      letterIndex: selectedIndex!,
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        revealed = List<int>.from(result['revealedIndices']);
+
+        for (final index in revealed) {
+          userInput[index] = widget.currentLevel.quote[index];
+        }
+      });
+      _hintKey.currentState?.refresh(); // обновить число подсказок
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось использовать подсказку')),
+      );
+    }
+  }
   @override
   void initState() {
     super.initState();
@@ -325,6 +349,18 @@ class _LevelScreenState extends State<LevelScreen> {
                     onSelect: onSelectCell,
                   ),
                 ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: HintCounterWidget(
+                        key: _hintKey,
+                        onPressed: _useHint,
+                      ),
+                    ),
+                ],
               ),
               const Divider(),
               VirtualKeyboardWidget(

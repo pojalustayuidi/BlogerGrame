@@ -1,3 +1,4 @@
+import 'package:blogergrame/screens/settings_screen/settings_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../servises/models/level.dart';
 import '../../store_screen/shope_screen.dart';
@@ -96,7 +97,7 @@ class Buttons extends StatelessWidget {
               loadStatus();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFDF0DC),
+              backgroundColor: const Color(0xFFFDF0DC),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -119,12 +120,12 @@ class Buttons extends StatelessWidget {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ShopScreen()),
+                MaterialPageRoute(builder: (_) => SettingsScreen()),
               );
               loadStatus();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFDF0DC),
+              backgroundColor: const Color(0xFFFDF0DC),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

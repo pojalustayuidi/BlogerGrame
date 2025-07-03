@@ -26,8 +26,9 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   static const int maxLives = 5;
   static const int restoreIntervalSeconds = 15 * 60;
-
+  int hints = 0;
   int lives = 0;
+  bool isLoadingHints = true;
   int coins = 0;
   bool loading = true;
   bool error = false;
@@ -42,6 +43,7 @@ class _MenuScreenState extends State<MenuScreen> {
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
+
 
   @override
   void initState() {
@@ -96,7 +98,6 @@ class _MenuScreenState extends State<MenuScreen> {
         }
       }
     } catch (e) {
-      print('Ошибка загрузки статуса: $e');
       if (mounted) {
         setState(() {
           loading = false;
@@ -113,7 +114,6 @@ class _MenuScreenState extends State<MenuScreen> {
     final prefs = await SharedPreferences.getInstance();
     final playerId = prefs.getString('playerId');
     if (playerId == null) {
-      print('Нет playerId для восстановления жизней');
       if (mounted) setState(() => error = true);
       return;
     }
@@ -143,7 +143,6 @@ class _MenuScreenState extends State<MenuScreen> {
         if (mounted) setState(() => error = true);
       }
     } catch (e) {
-      print('Ошибка при восстановлении жизней: $e');
       if (mounted) setState(() => error = true);
     }
   }

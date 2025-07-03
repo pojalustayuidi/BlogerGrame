@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class VirtualKeyboardWidget extends StatelessWidget {
+class VirtualKeyboardWidget extends StatefulWidget {
   final void Function(String, void Function() onLetterAccepted) onLetterPressed;
   final List<int> correctIndices;
   final List<int> revealed;
@@ -18,40 +18,47 @@ class VirtualKeyboardWidget extends StatelessWidget {
     required this.fullPhrase,
   });
 
+  @override
+  State<VirtualKeyboardWidget> createState() => _VirtualKeyboardWidgetState();
+}
+
+class _VirtualKeyboardWidgetState extends State<VirtualKeyboardWidget> with SingleTickerProviderStateMixin{
+
+
   bool isLetterCompleted(String letter) {
-    final number = letterMap[letter];
+    final number = widget.letterMap[letter];
     if (number == null) return false;
 
-    final indices = fullPhrase
+    final indices = widget.fullPhrase
         .toLowerCase()
         .split('')
         .asMap()
         .entries
-        .where((e) => letterMap[e.value] == number)
+        .where((e) => widget.letterMap[e.value] == number)
         .map((e) => e.key)
         .toList();
 
     return indices.every((index) =>
-    revealed.contains(index) ||
-        (userInput[index]?.toLowerCase() == fullPhrase[index].toLowerCase()));
+    widget.revealed.contains(index) ||
+        (widget.userInput[index]?.toLowerCase() == widget.fullPhrase[index].toLowerCase()));
   }
 
   bool isLetterUsed(String letter) {
-    final number = letterMap[letter];
+    final number = widget.letterMap[letter];
     if (number == null) return false;
 
-    final indices = fullPhrase
+    final indices = widget.fullPhrase
         .toLowerCase()
         .split('')
         .asMap()
         .entries
-        .where((e) => letterMap[e.value] == number)
+        .where((e) => widget.letterMap[e.value] == number)
         .map((e) => e.key)
         .toList();
 
     return indices.any((index) =>
-    revealed.contains(index) ||
-        (userInput[index]?.toLowerCase() == fullPhrase[index].toLowerCase()));
+    widget.revealed.contains(index) ||
+        (widget.userInput[index]?.toLowerCase() == widget.fullPhrase[index].toLowerCase()));
   }
 
   Widget buildRow(List<String> rowLetters) {
@@ -85,13 +92,14 @@ class VirtualKeyboardWidget extends StatelessWidget {
                   fgColor = Colors.black;
                 }
 
-                return Padding(
+                return
+                  Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: SizedBox(
                     width: buttonWidth,
                     height: buttonHeight,
                     child: ElevatedButton(
-                      onPressed: completed ? null : () => onLetterPressed(letter, () {}),
+                      onPressed: completed ? null : () => widget.onLetterPressed(letter, () {}),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: bgColor,
                         foregroundColor: fgColor,
