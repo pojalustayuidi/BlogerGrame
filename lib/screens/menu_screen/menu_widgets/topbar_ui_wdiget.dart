@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-class TopBar extends StatefulWidget {
+class TopBar extends StatelessWidget {
   final int lives;
   final int coins;
   final int maxLives;
   final Duration timeUntilNextLife;
+
   const TopBar({
     super.key,
     required this.lives,
@@ -13,11 +14,6 @@ class TopBar extends StatefulWidget {
     required this.timeUntilNextLife,
   });
 
-  @override
-  State<TopBar> createState() => _TopBarState();
-}
-
-class _TopBarState extends State<TopBar> {
   String formatDuration(Duration duration) {
     if (duration <= Duration.zero) return '00:00';
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -58,50 +54,53 @@ class _TopBarState extends State<TopBar> {
             children: [
               Row(
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(right: screenWidth * 0.01),
-                    child: Icon(
-                      Icons.favorite,
-                      color:
-                          widget.lives >= 1 ? Colors.red : Colors.grey.shade400,
-                      size: 24,
-                    ),
+                  Icon(
+                    Icons.favorite,
+                    color: lives >= 1 ? Colors.red : Colors.grey.shade400,
+                    size: 24,
                   ),
-
-                  SizedBox(width: 11,),
-
+                  const SizedBox(width: 11),
                   Text(
-                    '${widget.lives}/5',
-                    style: const TextStyle(fontSize: 24, fontFamily: 'baloo'),
-                  ),
-                  SizedBox(width: screenWidth * 0.21),
-                  Image.asset(
-                    'assets/coins.png',
-                    width: 24,
-                    height: 24,
-                  ),
-                  Text(
-                    ' ${widget.coins}',
+                    '$lives/$maxLives',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w500,
-                      fontFamily: 'baloo',
                     ),
                   ),
                 ],
               ),
-              if (widget.lives < 5 && widget.timeUntilNextLife > Duration.zero)
+
+              if (lives < maxLives && timeUntilNextLife > Duration.zero)
                 Padding(
-                  padding: EdgeInsets.only(top: 1.0, left: screenWidth * 0.05),
+                  padding: const EdgeInsets.only(left: 35, top: 4),
                   child: Text(
-                    formatDuration(widget.timeUntilNextLife),
+                    formatDuration(timeUntilNextLife),
                     style: const TextStyle(
                       color: Colors.grey,
-                      fontSize: 18,
-                      fontFamily: 'baloo',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),
+            ],
+          ),
+
+          Row(
+            children: [
+              Image.asset(
+                'assets/coins.png',
+                width: 24,
+                height: 24,
+                errorBuilder: (_, __, ___) => const Icon(Icons.monetization_on),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$coins',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ],

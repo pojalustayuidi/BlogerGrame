@@ -1,8 +1,15 @@
-import 'package:blogergrame/screens/loading_screen/loading_screen.dart';
-import 'package:flutter/material.dart';
+// Файл: lib/main.dart
 
-void main() async {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';  // Добавили Riverpod
+import 'screens/loading_screen/loading_screen.dart';
+
+void main() {
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -10,10 +17,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'BlogerGrame',
+    return MaterialApp(
+      title: 'Криптограмма',
       debugShowCheckedModeBanner: false,
-      home:  LoadingScreen(),
+      theme: ThemeData.dark(),
+      home: const LoadingScreen(),
     );
   }
 }

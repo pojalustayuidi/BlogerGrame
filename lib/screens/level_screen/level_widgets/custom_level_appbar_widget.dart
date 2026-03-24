@@ -1,11 +1,13 @@
-
 import 'package:flutter/material.dart';
-import '../../../servises/player_sevice.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../services/api/player_service.dart';
+import '../../../services/models/level.dart';
+import '../../../providers/player_provider.dart';
+import '../../../providers/level_provider.dart'; // ← импортируем
 import '../../menu_screen/menu_screen.dart';
-import '../../../servises/models/level.dart';
-import 'erors_display_widget.dart';
+import 'errors_display_widget.dart';
 
-class CustomLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomLevelAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final int levelId;
   final int errorCount;
   final List<Level> allLevels;
@@ -23,7 +25,7 @@ class CustomLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(100);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -51,17 +53,16 @@ class CustomLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
               GestureDetector(
                 onTap: () async {
                   await PlayerService.updateProgress(currentLevel.id, 0);
-                  final updatedLevelId = await PlayerService.getCurrentLevel();
-                  final updatedLevel = allLevels.firstWhere(
-                        (level) => level.id == updatedLevelId,
-                    orElse: () => currentLevel,
-                  );
+
+                  ref.invalidate(playerProvider);
+                  ref.invalidate(levelsProvider);
+
                   if (context.mounted) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (_) => MenuScreen(
                           levels: allLevels,
-                          currentLevel: updatedLevel,
+                          currentLevel: currentLevel,
                         ),
                       ),
                     );
@@ -76,7 +77,11 @@ class CustomLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: const Icon(Icons.home, color: Colors.white),
                 ),
               ),
-Expanded(child: Center(child: ErorsDisplayWidget(errorCount: errorCount),)),
+              Expanded(
+                child: Center(
+                  child: ErrorsDisplayWidget(errorCount: errorCount),
+                ),
+              ),
               Text(
                 'Level $levelId',
                 style: const TextStyle(
@@ -85,8 +90,6 @@ Expanded(child: Center(child: ErorsDisplayWidget(errorCount: errorCount),)),
                   color: Colors.white,
                 ),
               ),
-
-
             ],
           ),
         ),

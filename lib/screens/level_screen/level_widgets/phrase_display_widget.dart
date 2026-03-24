@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../servises/models/level.dart';
+import '../../../services/models/level.dart';
 import 'phrase_cell.dart';
 
 class PhraseDisplayWidget extends StatelessWidget {

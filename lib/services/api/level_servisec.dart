@@ -3,7 +3,7 @@ import '../models/level.dart';
 
 class LevelService {
   static final Dio _dio = Dio();
-  static const String baseUrl = 'https://blogergramegame-backend.onrender.com';
+  static const String baseUrl = 'https://app.kineshmobi.ru';
 
   static Future<Level> fetchLevelById(int id) async {
     try {

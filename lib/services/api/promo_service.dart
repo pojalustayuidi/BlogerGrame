@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 
 class PromoService {
   static final Dio _dio = Dio();
-  static const String baseUrl = 'https://blogergramegame-backend.onrender.com';
+  static const String baseUrl = 'https://app.kineshmobi.ru';
 
   static Future<Map<String, dynamic>?> redeemPromoCode({
     required String playerId,

@@ -1,37 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../../servises/player_sevice.dart';
-class HintCounterWidget extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/player_provider.dart';
+
+class HintCounterWidget extends ConsumerStatefulWidget {
   final VoidCallback? onPressed;
 
   const HintCounterWidget({super.key, this.onPressed});
 
   @override
-  State<HintCounterWidget> createState() => HintCounterWidgetState();
+  ConsumerState<HintCounterWidget> createState() => HintCounterWidgetState();
 }
 
-class HintCounterWidgetState extends State<HintCounterWidget> {
-  int _hintCount = 0;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    loadHints();
-  }
-
-  Future<void> loadHints() async {
-    final stats = await PlayerService.getPlayerStats();
-    setState(() {
-      _hintCount = stats?['hints'] ?? 0;
-      _isLoading = false;
-    });
-  }
-
-  void refresh() => loadHints(); // Публичный метод обновления
+class HintCounterWidgetState extends ConsumerState<HintCounterWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const SizedBox.shrink();
+    final playerAsync = ref.watch(playerProvider);
 
     return GestureDetector(
       onTap: widget.onPressed,
@@ -57,7 +41,7 @@ class HintCounterWidgetState extends State<HintCounterWidget> {
                   shape: BoxShape.circle,
                 ),
                 child: Text(
-                  '$_hintCount',
+                  '${playerAsync.valueOrNull?.hints ?? 0}',
                   style: const TextStyle(color: Colors.white, fontSize: 10),
                 ),
               ),
@@ -66,5 +50,8 @@ class HintCounterWidgetState extends State<HintCounterWidget> {
         ),
       ),
     );
+  }
+  void refresh() {
+    setState(() {});
   }
 }

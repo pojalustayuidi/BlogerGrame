@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ShopService {
   static final Dio _dio = Dio();
-  static const String baseUrl = 'https://blogergramegame-backend.onrender.com/shop';
+  static const String baseUrl = 'https://app.kineshmobi.ru/shop';
 
   static Future<List<Map<String, dynamic>>> fetchShopItems() async {
     try {

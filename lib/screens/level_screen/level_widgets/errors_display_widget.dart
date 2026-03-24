@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class ErorsDisplayWidget extends StatelessWidget {
+class ErrorsDisplayWidget extends StatelessWidget {
   final int errorCount;
 
-  const ErorsDisplayWidget({super.key, required this.errorCount});
+  const ErrorsDisplayWidget({super.key, required this.errorCount});
 
   @override
   Widget build(BuildContext context) {

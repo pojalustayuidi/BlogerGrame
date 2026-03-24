@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayerService {
   static final Dio _dio = Dio();
-  static const String baseUrl = 'https://blogergramegame-backend.onrender.com/player';
+  static const String baseUrl = 'https://app.kineshmobi.ru/player';
 
   static Future<String?> registerPlayer() async {
     final prefs = await SharedPreferences.getInstance();
@@ -111,8 +111,10 @@ class PlayerService {
 
       if (response.statusCode == 200) {
         return {
-          'hints': response.data['hints'],
-          'revealedIndices': List<int>.from(response.data['revealedIndices'] ?? []),
+          'hints': response.data['hintsLeft'] ?? 0,
+          'revealedIndices': List<int>.from(
+            response.data['revealedIndices'] ?? [],
+          ),
         };
       } else {
         return null;

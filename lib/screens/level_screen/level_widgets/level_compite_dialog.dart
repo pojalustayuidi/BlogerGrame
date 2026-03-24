@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../servises/models/level.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../services/models/level.dart';
 import '../../menu_screen/menu_screen.dart';
 import '../level_screen.dart';
 
-class LevelCompletedDialog extends StatelessWidget {
+class LevelCompletedDialog extends ConsumerWidget {
   final int levelNumber;
   final Level currentLevel;
   final List<Level> allLevels;
@@ -24,7 +25,7 @@ class LevelCompletedDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return PopScope(
       canPop: false,
       child: Dialog(
@@ -34,7 +35,6 @@ class LevelCompletedDialog extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Text(
@@ -58,7 +58,9 @@ class LevelCompletedDialog extends StatelessWidget {
                 child: Text(
                   '- ${currentLevel.author}',
                   style: const TextStyle(
-                      fontSize: 16, fontStyle: FontStyle.italic),
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic
+                  ),
                 ),
               ),
               if (formattedTime != null) ...[
@@ -67,12 +69,39 @@ class LevelCompletedDialog extends StatelessWidget {
                   child: Text(
                     'Время прохождения: $formattedTime',
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600
+                    ),
                   ),
                 ),
               ],
               const SizedBox(height: 24),
-              Text('Награда $rewards'),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        const Icon(Icons.monetization_on, color: Colors.amber),
+                        Text('+$coinsAdded'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Icon(Icons.account_balance_wallet, color: Colors.blue),
+                        Text('$newcoins'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

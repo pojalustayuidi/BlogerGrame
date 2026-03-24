@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/models/shop_item.dart';
+
 class ShopItemCard extends StatelessWidget {
-  final Map<String, dynamic> item;
+  final ShopItem item;  // Теперь принимаем ShopItem, а не Map
   final int playerPoints;
   final VoidCallback onBuy;
   final VoidCallback onInsufficientFunds;
@@ -20,12 +22,12 @@ class ShopItemCard extends StatelessWidget {
     } else if (type == 'life') {
       return Icon(Icons.favorite, color: Colors.red, size: size);
     }
-    return Icon(Icons.extension, size: size);
+    return Icon(Icons.extension, color: Colors.purple, size: size);
   }
 
   @override
   Widget build(BuildContext context) {
-    final canAfford = playerPoints >= item['cost'];
+    final canAfford = playerPoints >= item.cost;  // item.cost а не item['cost']
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -66,12 +68,12 @@ class ShopItemCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildItemIcon(item['type'], iconSize),
+                _buildItemIcon(item.type, iconSize),  // item.type
                 SizedBox(height: screenHeight * 0.015),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    item['name'],
+                    item.name,  // item.name
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: fontSize,
@@ -90,7 +92,7 @@ class ShopItemCard extends StatelessWidget {
                     ),
                     SizedBox(width: screenWidth * 0.01),
                     Text(
-                      '${item['cost']}',
+                      '${item.cost}',  // item.cost
                       style: TextStyle(
                         fontSize: fontSize,
                         color: canAfford ? Colors.black : Colors.grey,
