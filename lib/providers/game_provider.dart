@@ -5,6 +5,8 @@ import '../services/models/level.dart';
 
 part 'game_provider.g.dart';
 
+const _selectedIndexSentinel = Object();
+
 class GameState {
   final Level level;
   final List<int> revealed;
@@ -22,7 +24,7 @@ class GameState {
     required this.level,
     required this.revealed,
     required this.userInput,
-    this.selectedIndex,
+    required this.selectedIndex,
     required this.incorrectIndices,
     required this.correctIndices,
     required this.completedNumbers,
@@ -36,7 +38,7 @@ class GameState {
     Level? level,
     List<int>? revealed,
     List<String?>? userInput,
-    int? selectedIndex,
+    Object? selectedIndex = _selectedIndexSentinel,
     List<int>? incorrectIndices,
     List<int>? correctIndices,
     List<int>? completedNumbers,
@@ -49,7 +51,9 @@ class GameState {
       level: level ?? this.level,
       revealed: revealed ?? this.revealed,
       userInput: userInput ?? this.userInput,
-      selectedIndex: selectedIndex,
+      selectedIndex: selectedIndex == _selectedIndexSentinel
+          ? this.selectedIndex
+          : selectedIndex as int?,
       incorrectIndices: incorrectIndices ?? this.incorrectIndices,
       correctIndices: correctIndices ?? this.correctIndices,
       completedNumbers: completedNumbers ?? this.completedNumbers,
@@ -61,7 +65,7 @@ class GameState {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: false)
 class Game extends _$Game {
   @override
   GameState build(Level level) {
@@ -83,6 +87,7 @@ class Game extends _$Game {
   void selectCell(int index) {
     if (state.isCompleted || state.isLost) return;
     if (index < 0 || index >= state.userInput.length) return;
+
     if (!state.revealed.contains(index) && !state.correctIndices.contains(index)) {
       state = state.copyWith(
         selectedIndex: state.selectedIndex == index ? null : index,
@@ -96,7 +101,9 @@ class Game extends _$Game {
 
     final index = state.selectedIndex!;
     if (index >= state.userInput.length) return;
-    if (state.revealed.contains(index) || state.correctIndices.contains(index)) return;
+    if (state.revealed.contains(index) || state.correctIndices.contains(index)) {
+      return;
+    }
 
     final correctChar = state.level.quote[index].toLowerCase();
     final letterLower = letter.toLowerCase();
@@ -106,7 +113,11 @@ class Game extends _$Game {
 
     if (letterLower != correctChar) {
       final newErrorCount = state.errorCount + 1;
-      final newIncorrectIndices = List<int>.from(state.incorrectIndices)..add(index);
+      final newIncorrectIndices = List<int>.from(state.incorrectIndices);
+
+      if (!newIncorrectIndices.contains(index)) {
+        newIncorrectIndices.add(index);
+      }
 
       state = state.copyWith(
         userInput: newUserInput,
@@ -115,11 +126,14 @@ class Game extends _$Game {
       );
 
       if (newErrorCount >= 5) {
-        _handleLoss();
+        await _handleLoss();
         return;
       }
 
       Future.delayed(const Duration(seconds: 1), () {
+        if (state.isCompleted || state.isLost) return;
+        if (index >= state.userInput.length) return;
+
         final updatedInput = List<String?>.from(state.userInput);
         updatedInput[index] = null;
 
@@ -132,7 +146,11 @@ class Game extends _$Game {
         );
       });
     } else {
-      final newCorrectIndices = List<int>.from(state.correctIndices)..add(index);
+      final newCorrectIndices = List<int>.from(state.correctIndices);
+      if (!newCorrectIndices.contains(index)) {
+        newCorrectIndices.add(index);
+      }
+
       final newIncorrectIndices = List<int>.from(state.incorrectIndices)
         ..remove(index);
 
@@ -144,7 +162,7 @@ class Game extends _$Game {
 
       _updateCompletedNumbers();
       _moveToNextCell();
-      _checkCompletion();
+      await _checkCompletion();
     }
   }
 
@@ -162,7 +180,9 @@ class Game extends _$Game {
       final newUserInput = List<String?>.from(state.userInput);
 
       for (final index in newRevealed) {
-        newUserInput[index] = state.level.quote[index];
+        if (index >= 0 && index < newUserInput.length) {
+          newUserInput[index] = state.level.quote[index];
+        }
       }
 
       state = state.copyWith(
@@ -170,14 +190,14 @@ class Game extends _$Game {
         userInput: newUserInput,
       );
 
-      // ✅ Обновляем подсказки в playerProvider
       ref.read(playerProvider.notifier).updateHints(result['hints'] ?? 0);
 
       _updateCompletedNumbers();
-      _checkCompletion();
+      await _checkCompletion();
 
       return true;
     }
+
     return false;
   }
 
@@ -190,17 +210,20 @@ class Game extends _$Game {
           .split('')
           .asMap()
           .entries
-          .where((e) =>
-      state.level.letterMap[e.value.toLowerCase()] == number)
+          .where(
+            (e) => state.level.letterMap[e.value.toLowerCase()] == number,
+      )
           .map((e) => e.key)
           .toList();
 
-      final isCompleted = indices.every((index) =>
-      state.revealed.contains(index) ||
-          (state.userInput[index]?.toLowerCase() ==
-              state.level.quote[index].toLowerCase()));
+      final isNumberCompleted = indices.every(
+            (index) =>
+        state.revealed.contains(index) ||
+            (state.userInput[index]?.toLowerCase() ==
+                state.level.quote[index].toLowerCase()),
+      );
 
-      if (isCompleted) {
+      if (isNumberCompleted) {
         completed.add(number);
       }
     }
@@ -209,16 +232,17 @@ class Game extends _$Game {
   }
 
   void _moveToNextCell() {
-    if (state.selectedIndex == null) return;
+    final currentIndex = state.selectedIndex;
+    if (currentIndex == null) return;
 
-    for (int i = state.selectedIndex! + 1; i < state.userInput.length; i++) {
+    for (int i = currentIndex + 1; i < state.userInput.length; i++) {
       if (!state.revealed.contains(i) && !state.correctIndices.contains(i)) {
         state = state.copyWith(selectedIndex: i);
         return;
       }
     }
 
-    for (int i = 0; i < state.selectedIndex!; i++) {
+    for (int i = 0; i < currentIndex; i++) {
       if (!state.revealed.contains(i) && !state.correctIndices.contains(i)) {
         state = state.copyWith(selectedIndex: i);
         return;
@@ -229,7 +253,7 @@ class Game extends _$Game {
   }
 
   Future<void> _checkCompletion() async {
-    if (state.isCompleted) return;
+    if (state.isCompleted || state.isLost) return;
 
     final phrase = state.level.quote;
     final buffer = StringBuffer();
@@ -237,6 +261,7 @@ class Game extends _$Game {
 
     for (int i = 0; i < phrase.length; i++) {
       final char = phrase[i];
+
       if (char == ' ') continue;
 
       expectedBuffer.write(char.toLowerCase());
@@ -251,28 +276,26 @@ class Game extends _$Game {
     }
 
     if (buffer.toString() == expectedBuffer.toString()) {
-      if (!state.isCompleted) {
-        state = state.copyWith(isCompleted: true);
+      state = state.copyWith(isCompleted: true);
 
-        await PlayerService.updateProgress(
-          state.level.id + 1,
-          state.level.reward,
-        );
-      }
+      await PlayerService.updateProgress(
+        state.level.id + 1,
+        state.level.reward,
+      );
     }
   }
 
   Future<void> _handleLoss() async {
-    if (state.isLost) return;
+    if (state.isLost || state.isCompleted) return;
 
     state = state.copyWith(isLost: true);
 
     final success = await PlayerService.decrementLives();
     if (success) {
-      // ✅ Обновляем жизни в playerProvider
       final currentPlayer = ref.read(playerProvider).valueOrNull;
       if (currentPlayer != null) {
-        ref.read(playerProvider.notifier).updateLives(currentPlayer.lives - 1);
+        final newLives = (currentPlayer.lives - 1).clamp(0, 5);
+        ref.read(playerProvider.notifier).updateLives(newLives);
       }
     }
   }

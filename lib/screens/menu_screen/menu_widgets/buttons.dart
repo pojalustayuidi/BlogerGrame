@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../services/models/level.dart';
-import '../../store_screen/shope_screen.dart';
-import '../../settings_screen/settings_screen.dart';
 
-class Buttons extends StatelessWidget {
+import '../../../services/models/level.dart';
+import '../../settings_screen/settings_screen.dart';
+import '../../store_screen/shope_screen.dart';
+
+class MenuButtons extends StatelessWidget {
   final int lives;
   final Level currentLevel;
   final List<Level> levels;
@@ -11,7 +12,7 @@ class Buttons extends StatelessWidget {
   final VoidCallback showNoLivesDialog;
   final VoidCallback loadStatus;
 
-  const Buttons({
+  const MenuButtons({
     super.key,
     required this.lives,
     required this.currentLevel,
@@ -23,155 +24,244 @@ class Buttons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 🟢 Кнопка ПРОДОЛЖИТЬ (НОВЫЙ ДИЗАЙН)
-        SizedBox(
-          width: screenWidth * 0.75,
-          height: screenHeight * 0.1,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                if (lives > 0)
-                  BoxShadow(
-                    color: const Color(0xFF2BFF88).withOpacity(0.6),
-                    blurRadius: 25,
-                    spreadRadius: 2,
-                  ),
-              ],
-            ),
-            child: ElevatedButton(
-              onPressed: lives > 0 ? onPressedContinue : showNoLivesDialog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                padding: EdgeInsets.zero,
-              ).copyWith(
-                backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                      (states) {
-                    if (lives <= 0) return Colors.grey.shade400;
-                    return Colors.transparent;
-                  },
-                ),
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: lives > 0
-                      ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF2BFF88),
-                      Color(0xFF19C37D),
-                    ],
-                  )
-                      : null,
-                  color: lives <= 0 ? Colors.grey.shade400 : null,
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'ПРОДОЛЖИТЬ',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'Уровень ${currentLevel.id}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white.withOpacity(0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+        _PrimaryMenuButton(
+          title: 'Продолжить',
+          subtitle: 'Уровень ${currentLevel.id}',
+          icon: Icons.play_arrow_rounded,
+          enabled: lives > 0,
+          onTap: lives > 0 ? onPressedContinue : showNoLivesDialog,
         ),
-
-        const SizedBox(height: 32),
-
-        // 🟡 Кнопка МАГАЗИН (старый дизайн)
-        SizedBox(
-          width: screenWidth * 0.75,
-          height: screenHeight * 0.1,
-          child: ElevatedButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ShopScreen()),
-              );
-              loadStatus();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFDF0DC),
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              elevation: 4,
-            ),
-            child: const Text(
-              'МАГАЗИН',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+        const SizedBox(height: 16),
+        _SecondaryMenuButton(
+          title: 'Магазин',
+          subtitle: 'Купить жизни и бонусы',
+          icon: Icons.storefront_rounded,
+          iconBg: Colors.amber.shade50,
+          iconColor: Colors.orange,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ShopScreen()),
+            );
+            loadStatus();
+          },
         ),
-
-        const SizedBox(height: 32),
-
-        // 🔵 Кнопка НАСТРОЙКИ (старый дизайн)
-        SizedBox(
-          width: screenWidth * 0.75,
-          height: screenHeight * 0.1,
-          child: ElevatedButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-              loadStatus();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFDF0DC),
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              elevation: 4,
-            ),
-            child: const Text(
-              'НАСТРОЙКИ',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+        const SizedBox(height: 16),
+        _SecondaryMenuButton(
+          title: 'Настройки',
+          subtitle: 'Звук, музыка и прогресс',
+          icon: Icons.settings_rounded,
+          iconBg: Colors.blue.shade50,
+          iconColor: const Color(0xFF5B8DEF),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+            loadStatus();
+          },
         ),
       ],
+    );
+  }
+}
+
+class _PrimaryMenuButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _PrimaryMenuButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 92,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            if (enabled)
+              BoxShadow(
+                color: const Color(0xFF5B8DEF).withOpacity(0.28),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
+              ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: enabled ? null : Colors.grey.shade400,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+          ),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: enabled
+                  ? const LinearGradient(
+                colors: [Color(0xFF5B8DEF), Color(0xFF6FC3FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+                  : null,
+              color: enabled ? null : Colors.grey.shade400,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryMenuButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _SecondaryMenuButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+                color: Colors.black.withOpacity(0.05),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: iconColor),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey.shade500,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

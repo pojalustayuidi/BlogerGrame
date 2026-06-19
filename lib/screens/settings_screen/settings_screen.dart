@@ -1,8 +1,13 @@
+import 'package:blogergrame/screens/settings_screen/settings_widget/settings_audio_section.dart';
+import 'package:blogergrame/screens/settings_screen/settings_widget/settings_bonus_section.dart' show SettingsBonusSection;
+import 'package:blogergrame/screens/settings_screen/settings_widget/settings_resources_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../providers/player_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/api/promo_service.dart';
+
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -37,66 +42,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    final result = await PromoService.redeemPromoCode(
-      playerId: playerId,
-      promoCode: code,
-    );
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    if (result == null) {
-      _showSnackBar(
-        'Ошибка соединения с сервером',
-        backgroundColor: Colors.red,
+    try {
+      final result = await PromoService.redeemPromoCode(
+        playerId: playerId,
+        promoCode: code,
       );
-      return;
-    }
 
-    if (result['success'] == true) {
-      final rewardCoins = result['reward_coins'] is int
-          ? result['reward_coins'] as int
-          : int.tryParse(result['reward_coins'].toString()) ?? 0;
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-      final rewardHints = result['reward_hints'] is int
-          ? result['reward_hints'] as int
-          : int.tryParse(result['reward_hints'].toString()) ?? 0;
-
-      final rewardLives = result['reward_lives'] is int
-          ? result['reward_lives'] as int
-          : int.tryParse(result['reward_lives'].toString()) ?? 0;
-
-      final player = ref.read(playerProvider).valueOrNull;
-      if (player != null) {
-        if (rewardCoins > 0) {
-          ref.read(playerProvider.notifier).updateCoins(player.coins + rewardCoins);
-        }
-
-        if (rewardHints > 0) {
-          ref.read(playerProvider.notifier).updateHints(player.hints + rewardHints);
-        }
-
-        if (rewardLives > 0) {
-          final newLives = (player.lives + rewardLives).clamp(0, 5);
-          ref.read(playerProvider.notifier).updateLives(newLives);
-        }
+      if (result == null) {
+        _showSnackBar(
+          'Ошибка соединения с сервером',
+          backgroundColor: Colors.red,
+        );
+        return;
       }
 
-      final rewards = <String>[
-        if (rewardCoins > 0) '+$rewardCoins монет',
-        if (rewardHints > 0) '+$rewardHints подсказок',
-        if (rewardLives > 0) '❤+$rewardLives жизней',
-      ].join('\n');
+      if (result['success'] == true) {
+        final rewardCoins = result['reward_coins'] is int
+            ? result['reward_coins'] as int
+            : int.tryParse(result['reward_coins'].toString()) ?? 0;
 
+        final rewardHints = result['reward_hints'] is int
+            ? result['reward_hints'] as int
+            : int.tryParse(result['reward_hints'].toString()) ?? 0;
+
+        final rewardLives = result['reward_lives'] is int
+            ? result['reward_lives'] as int
+            : int.tryParse(result['reward_lives'].toString()) ?? 0;
+
+        final player = ref.read(playerProvider).valueOrNull;
+        if (player != null) {
+          if (rewardCoins > 0) {
+            ref
+                .read(playerProvider.notifier)
+                .updateCoins(player.coins + rewardCoins);
+          }
+
+          if (rewardHints > 0) {
+            ref
+                .read(playerProvider.notifier)
+                .updateHints(player.hints + rewardHints);
+          }
+
+          if (rewardLives > 0) {
+            final newLives = (player.lives + rewardLives).clamp(0, 5);
+            ref.read(playerProvider.notifier).updateLives(newLives);
+          }
+        }
+
+        final rewards = <String>[
+          if (rewardCoins > 0) '+$rewardCoins монет',
+          if (rewardHints > 0) '+$rewardHints подсказок',
+          if (rewardLives > 0) '❤ +$rewardLives жизней',
+        ].join('\n');
+
+        _showSnackBar(
+          'Промокод активирован!\n$rewards',
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        final errorMessage = result['error'] ?? 'Неизвестная ошибка';
+        _showSnackBar(
+          errorMessage,
+          backgroundColor: Colors.red,
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       _showSnackBar(
-        'Промокод активирован!\n$rewards',
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      );
-    } else {
-      final errorMessage = result['error'] ?? 'Неизвестная ошибка';
-      _showSnackBar(
-        errorMessage,
+        'Не удалось активировать промокод',
         backgroundColor: Colors.red,
       );
     }
@@ -137,8 +155,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
           contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
           actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               CircleAvatar(
                 radius: 18,
                 backgroundColor: Color(0xFFF3E8FF),
@@ -218,7 +236,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6C63FF),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -227,17 +246,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         );
       },
-    );
+    ).then((_) => controller.dispose());
   }
 
   void _showStatsDialog() {
     final player = ref.read(playerProvider).valueOrNull;
     if (player == null) return;
 
-    final solvedPuzzles = player.currentLevel - 1;
     const totalLevels = 8;
-    final progress = totalLevels > 0 ? solvedPuzzles / totalLevels : 0.0;
-    final percent = (progress * 100).clamp(0, 100);
+    final solvedPuzzles = (player.currentLevel - 1).clamp(0, totalLevels);
+    final progress =
+    totalLevels > 0 ? (solvedPuzzles / totalLevels).clamp(0.0, 1.0) : 0.0;
+    final percent = progress * 100;
 
     showDialog(
       context: context,
@@ -301,6 +321,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Future<void> _onRefresh() async {
+    ref.invalidate(settingsProvider);
+    ref.invalidate(playerProvider);
+
+    await Future.wait([
+      ref.read(settingsProvider.future),
+      ref.read(playerProvider.future),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final playerAsync = ref.watch(playerProvider);
@@ -321,88 +351,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: settingsAsync.when(
         data: (settings) {
           return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(settingsProvider);
-              ref.invalidate(playerProvider);
-            },
+            onRefresh: _onRefresh,
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
                 playerAsync.when(
-                  data: (player) => _ResourcesCard(player: player),
+                  data: (player) => SettingsResourcesCard(player: player),
                   loading: () => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (_, __) => const SizedBox.shrink(),
                 ),
-
                 const SizedBox(height: 20),
-
-                const _SectionTitle('Аудио'),
-                const SizedBox(height: 10),
-
-                _SettingsCard(
-                  children: [
-                    _SettingsSwitchTile(
-                      icon: Icons.volume_up_rounded,
-                      iconBg: Colors.blue.shade50,
-                      iconColor: Colors.blue,
-                      title: 'Звуки',
-                      subtitle: 'Включить или выключить игровые звуки',
-                      value: settings.soundEnabled,
-                      onChanged: (_) {
-                        ref.read(settingsProvider.notifier).toggleSound();
-                      },
-                    ),
-                    const _InnerDivider(),
-                    _SettingsSwitchTile(
-                      icon: Icons.music_note_rounded,
-                      iconBg: Colors.green.shade50,
-                      iconColor: Colors.green,
-                      title: 'Музыка',
-                      subtitle: 'Фоновая музыка в игре',
-                      value: settings.musicEnabled,
-                      onChanged: (_) {
-                        ref.read(settingsProvider.notifier).toggleMusic();
-                      },
-                    ),
-                  ],
+                SettingsAudioSection(
+                  settings: settings,
+                  onSoundChanged: (_) {
+                    ref.read(settingsProvider.notifier).toggleSound();
+                  },
+                  onMusicChanged: (_) {
+                    ref.read(settingsProvider.notifier).toggleMusic();
+                  },
                 ),
-
                 const SizedBox(height: 20),
-
-                const _SectionTitle('Бонусы и прогресс'),
-                const SizedBox(height: 10),
-
-                _SettingsCard(
-                  children: [
-                    _ActionTile(
-                      icon: Icons.card_giftcard_rounded,
-                      iconBg: Colors.purple.shade50,
-                      iconColor: Colors.purple,
-                      title: 'Промокод',
-                      subtitle: 'Введите промокод и получите награды',
-                      trailing: _isLoading
-                          ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                          : const Icon(Icons.chevron_right_rounded),
-                      onTap: _isLoading ? null : _showPromoCodeDialog,
-                    ),
-                    const _InnerDivider(),
-                    _ActionTile(
-                      icon: Icons.bar_chart_rounded,
-                      iconBg: Colors.orange.shade50,
-                      iconColor: Colors.orange,
-                      title: 'Статистика',
-                      subtitle: 'Посмотреть прогресс прохождения',
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _showStatsDialog,
-                    ),
-                  ],
+                SettingsBonusSection(
+                  isLoading: _isLoading,
+                  onPromoTap: _isLoading ? null : _showPromoCodeDialog,
+                  onStatsTap: _showStatsDialog,
                 ),
               ],
             ),
@@ -457,273 +432,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ResourcesCard extends StatelessWidget {
-  final dynamic player;
-
-  const _ResourcesCard({required this.player});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5B8DEF), Color(0xFF6FC3FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-            color: const Color(0xFF5B8DEF).withOpacity(0.28),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Ваши ресурсы',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _ResourceStat(
-                  icon: Image.asset('assets/coins.png', width: 26, height: 26),
-                  value: player.coins,
-                  label: 'Монет',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ResourceStat(
-                  icon: Image.asset('assets/icon_hint.png', width: 26, height: 26),
-                  value: player.hints,
-                  label: 'Подсказок',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ResourceStat(
-                  icon: const Icon(Icons.favorite, color: Colors.red, size: 26),
-                  value: player.lives,
-                  label: 'Жизней',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ResourceStat extends StatelessWidget {
-  final Widget icon;
-  final int value;
-  final String label;
-
-  const _ResourceStat({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
-      ),
-      child: Column(
-        children: [
-          icon,
-          const SizedBox(height: 8),
-          Text(
-            '$value',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: Colors.grey.shade800,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _SettingsCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            color: Colors.black.withOpacity(0.05),
-          ),
-        ],
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _SettingsSwitchTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  const _SettingsSwitchTile({
-    required this.icon,
-    required this.iconBg,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      secondary: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: iconBg,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: iconColor),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: Colors.grey.shade600),
-      ),
-      value: value,
-      onChanged: onChanged,
-      activeColor: const Color(0xFF5B8DEF),
-    );
-  }
-}
-
-class _ActionTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _ActionTile({
-    required this.icon,
-    required this.iconBg,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      onTap: onTap,
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: iconBg,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: iconColor),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: Colors.grey.shade600),
-      ),
-      trailing: trailing,
-    );
-  }
-}
-
-class _InnerDivider extends StatelessWidget {
-  const _InnerDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      indent: 16,
-      endIndent: 16,
-      color: Colors.grey.shade200,
     );
   }
 }

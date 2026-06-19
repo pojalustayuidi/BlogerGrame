@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class TopBar extends StatelessWidget {
+class MenuTopBar extends StatelessWidget {
   final int lives;
   final int coins;
   final int maxLives;
   final Duration timeUntilNextLife;
 
-  const TopBar({
+  const MenuTopBar({
     super.key,
     required this.lives,
     required this.coins,
@@ -23,85 +23,120 @@ class TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = screenWidth * 0.08;
-    final verticalPadding = screenWidth * 0.04;
+    final showTimer = lives < maxLives && timeUntilNextLife > Duration.zero;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFDF0DC),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF5B8DEF), Color(0xFF6FC3FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 3),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+            color: const Color(0xFF5B8DEF).withOpacity(0.28),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.favorite,
-                    color: lives >= 1 ? Colors.red : Colors.grey.shade400,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 11),
-                  Text(
-                    '$lives/$maxLives',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+          Expanded(
+            child: _TopBarStatCard(
+              icon: const Icon(
+                Icons.favorite_rounded,
+                color: Colors.redAccent,
+                size: 24,
               ),
-
-              if (lives < maxLives && timeUntilNextLife > Duration.zero)
-                Padding(
-                  padding: const EdgeInsets.only(left: 35, top: 4),
-                  child: Text(
-                    formatDuration(timeUntilNextLife),
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-            ],
+              title: 'Жизни',
+              value: '$lives/$maxLives',
+              subtitle: showTimer ? 'Следующая через ${formatDuration(timeUntilNextLife)}' : 'Полный запас',
+            ),
           ),
-
-          Row(
-            children: [
-              Image.asset(
+          const SizedBox(width: 12),
+          Expanded(
+            child: _TopBarStatCard(
+              icon: Image.asset(
                 'assets/coins.png',
                 width: 24,
                 height: 24,
-                errorBuilder: (_, __, ___) => const Icon(Icons.monetization_on),
+                errorBuilder: (_, __, ___) =>
+                const Icon(Icons.monetization_on_rounded, color: Colors.amber),
               ),
+              title: 'Монеты',
+              value: '$coins',
+              subtitle: 'Ваш баланс',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopBarStatCard extends StatelessWidget {
+  final Widget icon;
+  final String title;
+  final String value;
+  final String subtitle;
+
+  const _TopBarStatCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              icon,
               const SizedBox(width: 8),
-              Text(
-                '$coins',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.92),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.84),
+              fontSize: 12,
+              height: 1.3,
+            ),
           ),
         ],
       ),
