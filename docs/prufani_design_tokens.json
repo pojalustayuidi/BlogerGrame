@@ -1,0 +1,45 @@
+{
+  "brand": {
+    "primary": "#7B5CFF",
+    "primaryDark": "#5536BA",
+    "purpleLight": "#A88AFF",
+    "yellowCta": "#FFE066",
+    "pinkLives": "#FF7FA3",
+    "hintLilac": "#B39DFF",
+    "coinGold": "#FFB928"
+  },
+  "surfaces": {
+    "background": "#FFF9F3",
+    "white": "#FFFFFF",
+    "lavender": "#F8F0FF",
+    "panel": "#E9E3FF",
+    "text": "#27213F",
+    "mutedText": "#8C84A0"
+  },
+  "categories": {
+    "streamers": "#FFE7DA",
+    "bloggers": "#EEE6FF",
+    "tiktokers": "#DDF7F1"
+  },
+  "behavior": {
+    "maxLives": 5,
+    "triesPerLife": 3,
+    "lifeRegenMinutes": 30,
+    "dailyPuzzle": "planned",
+    "case404": "planned"
+  },
+  "flutterSizesDp": {
+    "navIcon": 24,
+    "inlineIcon": 20,
+    "resourceIcon": 36,
+    "categoryIllustration": 76,
+    "primaryButtonHeight": 52,
+    "touchTargetMin": 48,
+    "cornerRadiusCard": 24
+  },
+  "fontRecommendation": [
+    "Manrope",
+    "Nunito Sans",
+    "Rubik"
+  ]
+}

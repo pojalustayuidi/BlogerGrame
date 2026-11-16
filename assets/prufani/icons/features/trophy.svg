@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs>
+<linearGradient id="purple" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#D49BFF"/><stop offset="0.38" stop-color="#9558FF"/><stop offset="1" stop-color="#592CCF"/></linearGradient>
+<linearGradient id="purple2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#B389FF"/><stop offset="1" stop-color="#6730D9"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2=".25" y2="1"><stop stop-color="#FFF5A7"/><stop offset="0.35" stop-color="#FFDD44"/><stop offset="0.72" stop-color="#FFB623"/><stop offset="1" stop-color="#F58F13"/></linearGradient>
+<linearGradient id="gold2" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#FFD957"/><stop offset="1" stop-color="#F59C15"/></linearGradient>
+<linearGradient id="heart" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#FFBECC"/><stop offset=".4" stop-color="#FF678B"/><stop offset="1" stop-color="#EC2C65"/></linearGradient>
+<linearGradient id="peach" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFB794"/><stop offset="1" stop-color="#F36A44"/></linearGradient>
+<linearGradient id="mint" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8CEBC9"/><stop offset="1" stop-color="#2DBAA9"/></linearGradient>
+<linearGradient id="lilac" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#D7C6FF"/></linearGradient>
+<linearGradient id="silver" x1="0" y1="0" x2=".4" y2="1"><stop stop-color="#F7F3FF"/><stop offset=".55" stop-color="#BCBDD8"/><stop offset="1" stop-color="#8784A7"/></linearGradient>
+<linearGradient id="surface" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F7F0FF"/></linearGradient>
+<linearGradient id="btn" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFF0A0"/><stop offset=".55" stop-color="#FFD34C"/><stop offset="1" stop-color="#FFB51E"/></linearGradient>
+</defs><ellipse cx="133" cy="223" rx="74" ry="15" fill="#25134B" opacity=".14"/><path d="M83 54 H173 V126 Q173 158 128 170 Q83 158 83 126Z" fill="url(#gold)" stroke="#D48B16" stroke-width="7"/>
+<path d="M82 72 H52 V104 Q53 129 87 132 M174 72 H204 V104 Q204 129 170 132" fill="none" stroke="#E9A022" stroke-width="13" stroke-linecap="round"/>
+<path d="M128 173 V195 M93 207 H163" stroke="#9158C5" stroke-width="16" stroke-linecap="round"/>
+<path d="M128 82 137 101 159 104 143 118 148 140 128 129 108 140 113 118 97 104 119 101Z" fill="#FFF7AF"/>
+</svg>

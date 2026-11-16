@@ -1,27 +1,25 @@
-// Файл: lib/main.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';  // Добавили Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'core/theme/prufani_theme.dart';
 import 'screens/loading_screen/loading_screen.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: PrufaniApp()));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PrufaniApp extends StatelessWidget {
+  const PrufaniApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Криптограмма',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
-      home: const LoadingScreen(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+        title: 'ПРУФАНИ!',
+        debugShowCheckedModeBanner: false,
+        theme: buildPrufaniTheme(),
+        // Keep a fixed visual style independent of device light/dark theme.
+        darkTheme: buildPrufaniTheme(),
+        themeMode: ThemeMode.light,
+        home: const PrufaniStartupGate(),
+      );
 }

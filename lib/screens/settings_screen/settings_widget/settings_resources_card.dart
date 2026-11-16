@@ -1,7 +1,5 @@
 import 'package:blogergrame/providers/player_provider.dart';
-import 'package:blogergrame/services/api/player_service.dart';
 import 'package:flutter/material.dart';
-
 
 class SettingsResourcesCard extends StatelessWidget {
   final PlayerData player;

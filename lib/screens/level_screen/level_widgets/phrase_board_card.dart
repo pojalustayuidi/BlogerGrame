@@ -61,9 +61,6 @@ class _PhraseBoardCardState extends State<PhraseBoardCard> {
 
   @override
   Widget build(BuildContext context) {
-    // scrollbar ширина + SizedBox между контентом и баром
-    const scrollbarWidth = 6.0 + 10.0;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 14, 14),

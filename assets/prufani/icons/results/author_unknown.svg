@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs>
+<linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#CE9FFF"/><stop offset=".5" stop-color="#884EFF"/><stop offset="1" stop-color="#5B28CE"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0.1" y2="1"><stop stop-color="#FFF4AA"/><stop offset=".35" stop-color="#FFE46B"/><stop offset=".72" stop-color="#FFBA2E"/><stop offset="1" stop-color="#F48D10"/></linearGradient>
+<linearGradient id="rose" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFB5CD"/><stop offset=".6" stop-color="#FF6692"/><stop offset="1" stop-color="#EC356D"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4D6FF"/></linearGradient>
+</defs>
+<circle cx="128" cy="127" r="101" fill="url(#card)" stroke="#A17AEC" stroke-width="8"/>
+<circle cx="128" cy="117" r="66" fill="url(#violet)"/>
+<circle cx="128" cy="110" r="33" fill="#F5E7FF"/>
+<path d="M55 203 Q65 156 128 156 Q191 156 201 203" fill="#F5E7FF"/>
+<circle cx="193" cy="195" r="33" fill="url(#gold)" stroke="white" stroke-width="7"/>
+<path d="M186 184 C186 168 210 169 208 185 C206 197 194 195 194 204" fill="none" stroke="#512690" stroke-width="8" stroke-linecap="round"/>
+<circle cx="194" cy="215" r="4" fill="#512690"/>
+</svg>
