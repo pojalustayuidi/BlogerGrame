@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import '../core/backend/backend_api.dart';
-import '../core/backend/backend_config.dart';
-import '../core/backend/backend_models.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/di/backend_providers.dart';
+import '../core/network/backend_config.dart';
+import '../features/catalog/domain/catalog_models.dart';
+import '../features/economy/domain/economy_models.dart';
 
 /// Development-only integration screen, launched using main_api_smoke.dart.
 /// Existing gameplay and UI remain intact until their staged migration.
-class BackendCheckScreen extends StatefulWidget {
+class BackendCheckScreen extends ConsumerStatefulWidget {
   const BackendCheckScreen({super.key});
 
   @override
-  State<BackendCheckScreen> createState() => _BackendCheckScreenState();
+  ConsumerState<BackendCheckScreen> createState() => _BackendCheckScreenState();
 }
 
-class _BackendCheckScreenState extends State<BackendCheckScreen> {
-  final BackendApi _api = BackendApi();
+class _BackendCheckScreenState extends ConsumerState<BackendCheckScreen> {
   bool _loading = true;
   bool _loadingLevels = false;
   String? _error;
@@ -34,15 +35,18 @@ class _BackendCheckScreenState extends State<BackendCheckScreen> {
       _loading = true;
       _error = null;
     });
+    final auth = ref.read(authRepositoryProvider);
+    final economy = ref.read(economyRepositoryProvider);
+    final catalog = ref.read(catalogRepositoryProvider);
     try {
-      final player = await _api.getPlayerId();
-      final wallet = await _api.wallet();
-      final categories = await _api.categories();
+      final player = await auth.getPlayerId();
+      final wallet = await economy.wallet();
+      final categories = await catalog.categories();
       final slug = _selectedCategory ??
           (categories.isNotEmpty ? categories.first.slug : null);
       final levels = slug == null
           ? <LevelSummary>[]
-          : await _api.levels(category: slug);
+          : await catalog.levels(category: slug);
       if (!mounted) return;
       setState(() {
         _playerId = player;
@@ -67,8 +71,9 @@ class _BackendCheckScreenState extends State<BackendCheckScreen> {
       _loadingLevels = true;
       _error = null;
     });
+    final catalog = ref.read(catalogRepositoryProvider);
     try {
-      final levels = await _api.levels(category: slug);
+      final levels = await catalog.levels(category: slug);
       if (!mounted) return;
       setState(() {
         _selectedCategory = slug;
@@ -83,10 +88,12 @@ class _BackendCheckScreenState extends State<BackendCheckScreen> {
   }
 
   Future<void> _showAttempt(LevelSummary level) async {
+    final startOrResume = ref.read(startOrResumeAttemptProvider);
+    final game = ref.read(gameRepositoryProvider);
     try {
-      final attempt = await _api.startOrResumeLevel(level.id);
+      final attempt = await startOrResume(level.id);
       // Check the persisted state through a separate backend GET.
-      final restored = await _api.attempt(attempt.id);
+      final restored = await game.getAttempt(attempt.id);
       if (!mounted) return;
       showModalBottomSheet<void>(
         context: context,

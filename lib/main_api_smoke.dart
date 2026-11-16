@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dev/backend_check_screen.dart';
 
-/// Temporary development entry point. Normal lib/main.dart is unchanged.
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'BlogerGrame · Backend Test',
-    home: BackendCheckScreen(),
-  ));
-}
+/// Development-only entrypoint. Production lib/main.dart is untouched.
+void main() => runApp(const ProviderScope(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'BlogerGrame · Backend Test',
+        home: BackendCheckScreen(),
+      ),
+    ));
