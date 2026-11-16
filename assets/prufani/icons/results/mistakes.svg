@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs>
+<linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#CE9FFF"/><stop offset=".5" stop-color="#884EFF"/><stop offset="1" stop-color="#5B28CE"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0.1" y2="1"><stop stop-color="#FFF4AA"/><stop offset=".35" stop-color="#FFE46B"/><stop offset=".72" stop-color="#FFBA2E"/><stop offset="1" stop-color="#F48D10"/></linearGradient>
+<linearGradient id="rose" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFB5CD"/><stop offset=".6" stop-color="#FF6692"/><stop offset="1" stop-color="#EC356D"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4D6FF"/></linearGradient>
+</defs>
+<ellipse cx="128" cy="226" rx="82" ry="12" fill="#2B1647" opacity=".13"/>
+<rect x="32" y="32" width="192" height="190" rx="46" fill="url(#card)" stroke="#B896EF" stroke-width="9"/>
+<rect x="56" y="54" width="144" height="146" rx="31" fill="#FFF1F5" stroke="#FF82A8" stroke-width="6"/>
+<path d="M90 91 L166 167 M166 91 L90 167" stroke="#D91F67" stroke-width="22" stroke-linecap="round"/>
+<path d="M78 70 Q128 45 171 71" fill="none" stroke="white" stroke-width="7" opacity=".78"/>
+</svg>

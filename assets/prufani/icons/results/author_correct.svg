@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs>
+<linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#CE9FFF"/><stop offset=".5" stop-color="#884EFF"/><stop offset="1" stop-color="#5B28CE"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0.1" y2="1"><stop stop-color="#FFF4AA"/><stop offset=".35" stop-color="#FFE46B"/><stop offset=".72" stop-color="#FFBA2E"/><stop offset="1" stop-color="#F48D10"/></linearGradient>
+<linearGradient id="rose" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFB5CD"/><stop offset=".6" stop-color="#FF6692"/><stop offset="1" stop-color="#EC356D"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4D6FF"/></linearGradient>
+</defs>
+<circle cx="128" cy="129" r="92" fill="url(#card)" stroke="white" stroke-width="8"/>
+<circle cx="128" cy="127" r="76" fill="#54D8AB" stroke="#24A880" stroke-width="10"/>
+<path d="M83 130 L114 162 L174 96" fill="none" stroke="white" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M98 67 Q125 57 150 72" fill="none" stroke="#A9FFE4" stroke-width="9" stroke-linecap="round"/>
+</svg>

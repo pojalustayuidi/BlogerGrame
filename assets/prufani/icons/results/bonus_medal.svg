@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs>
+<linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#CE9FFF"/><stop offset=".5" stop-color="#884EFF"/><stop offset="1" stop-color="#5B28CE"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0.1" y2="1"><stop stop-color="#FFF4AA"/><stop offset=".35" stop-color="#FFE46B"/><stop offset=".72" stop-color="#FFBA2E"/><stop offset="1" stop-color="#F48D10"/></linearGradient>
+<linearGradient id="rose" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFB5CD"/><stop offset=".6" stop-color="#FF6692"/><stop offset="1" stop-color="#EC356D"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4D6FF"/></linearGradient>
+</defs>
+<ellipse cx="131" cy="226" rx="79" ry="14" fill="#32104B" opacity=".12"/>
+<path d="M72 177 L60 205 L91 194 L105 216 L117 165" fill="url(#violet)" stroke="#6A2FB7" stroke-width="5" stroke-linejoin="round"/>
+<path d="M155 166 L168 215 L185 193 L210 204 L184 154" fill="url(#violet)" stroke="#6A2FB7" stroke-width="5" stroke-linejoin="round"/>
+<circle cx="132" cy="119" r="82" fill="url(#gold)" stroke="#DD8E0E" stroke-width="7"/>
+<circle cx="132" cy="119" r="65" fill="#FFDA56" stroke="#FFF3AE" stroke-width="7"/>
+<path d="M132 70 L147 101 L181 105 L156 127 L163 164 L132 146 L101 164 L108 127 L83 105 L117 101Z" fill="#FFF7C6" stroke="#DC9511" stroke-width="6" stroke-linejoin="round"/>
+<path d="M94 76 Q120 56 148 66" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" opacity=".8"/>
+</svg>

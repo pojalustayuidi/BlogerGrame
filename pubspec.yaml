@@ -1,22 +1,11 @@
 name: blogergrame
 description: "Game BloggerGame"
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
-
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
   sdk: ^3.5.4
 
-
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
@@ -25,7 +14,7 @@ dependencies:
   shared_preferences: ^2.3.2
   flutter_secure_storage: ^9.2.4
   flutter_svg: ^2.1.0
-  flutter_launcher_icons:   ^0.14.4
+  flutter_launcher_icons: ^0.14.4
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
 
@@ -35,51 +24,34 @@ dev_dependencies:
   riverpod_generator: ^2.4.0
   build_runner: ^2.4.8
   riverpod_lint: ^2.3.10
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of the
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^4.0.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
-
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
   assets:
-     - assets/
-
-  #   - images/a_dot_ham.jpeg
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a "family"
-  # key, with the font family name, and a "fonts" key with a list giving the
-  # asset and other descriptors for the font. For example:
+    # Keep legacy flat assets because existing screens still depend on them.
+    - assets/
+    # Nested directories from Prufani Asset Kit v1.1.
+    - assets/prufani/backgrounds/
+    - assets/prufani/brand/
+    - assets/prufani/decor/
+    - assets/prufani/illustrations/
+    - assets/prufani/loading/
+    - assets/prufani/icons/categories/
+    - assets/prufani/icons/features/
+    - assets/prufani/icons/navigation/
+    - assets/prufani/icons/resources/
+    - assets/prufani/icons/results/
+    - assets/prufani/ui/
   fonts:
-     - family: baloo
-       fonts:
-         - asset: assets/fonts/baloo-regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-     - family: Franklin
-       fonts:
-         - asset: assets/fonts/franklin gothic_demi.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
+    - family: baloo
+      fonts:
+        - asset: assets/fonts/baloo-regular.ttf
+    - family: Franklin
+      fonts:
+        - asset: assets/fonts/franklin gothic_demi.ttf
+
 flutter_launcher_icons:
-    android: true
-    ios: true
-    image_path: "assets/ava3.png"
+  android: true
+  ios: true
+  image_path: "assets/ava3.png"

@@ -1,116 +1,122 @@
-# BlogerGrame — Patch 01: safe guest session + API contract
+# ПРУФАНИ! — UI Polish 01 / Windows 11
 
-## Scope
+## Состав патча
 
-This archive adds the real backend adapter, secure session storage, models,
-Dio request wrapper with synchronized refresh, and a development-only screen
-that displays the real guest, wallet, categories, levels and saved puzzle layout.
-The normal `lib/main.dart` entry point is **unchanged**. Existing UI/providers
-are deliberately not wired to the new backend yet. No gameplay systems were
-replaced or deleted in Patch 01.
+Полные Dart-файлы для существующих `lib/features/home/`, заменённый старый
+`lib/screens/loading_screen/loading_screen.dart`, новый независимый Bootstrap,
+`lib/main.dart`, путь к новым ассетам в `pubspec.yaml`, тесты, полный единый
+`assets/prufani/` из предоставленного `Prufani_Complete_UI_Kit_v1_2`.
 
-Source baseline: GitHub `pojalustayuidi/BlogerGrame` `main`, inspected on
-2026-11-16. Backend contract: `pojalustayuidi/BlogerGrameGame-backend` `main`,
-after PR #5 and #6.
+- Никаких изменений backend, миграций, старых игровых сервисов, токенов или Android Gradle.
+- Никаких новых dependencies: используются существующие Riverpod,
+  shared_preferences, flutter_secure_storage, Dio, flutter_svg.
+- Патч совместим с Flutter-репозиторием после Clean Architecture (#2),
+  также включает необходимые файлы Home Patch 03, который может быть только
+  в локальной ветке и не находится на `main` GitHub.
 
-## Install on Windows 11 (PowerShell)
+## Установка (не теряем незакоммиченные изменения)
 
-1. Commit or stash your existing local work.
-2. In the Flutter project root, first create the branch on the latest main:
+1. На ПК открой PowerShell:
 
 ```powershell
-git switch main
-git pull --ff-only
-git switch -c feat/flutter-01-backend-foundation
+cd D:\Bloger\BlogerGrame
+git status
+git branch --show-current
 ```
 
-3. Now copy the **contents** of this ZIP into the Flutter project root,
-   preserving `lib/`, `android/`, `test/` paths. Confirm overwrite for
-   `pubspec.yaml` and the two Android manifests. Do not delete other files.
-4. Then run:
+2. Не переключайся на `main`, если твой рабочий Home Patch 03 ещё не закоммичен.
+   Сначала сохрани свою текущую работу в Git или резервной копии. Создай
+   отдельную ветку **от той ветки, где сейчас работает меню**:
+
+```powershell
+git switch -c feat/flutter-ui-polish-01-loading-home
+```
+
+3. Скачай ZIP и распакуй прямо в корень Flutter-проекта, сохраняя пути:
+
+```powershell
+Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\Prufani_UI_Polish_01.zip" `
+  -DestinationPath "D:\Bloger\BlogerGrame" -Force
+```
+
+Если архив скачался в другое место, замени только параметр `-LiteralPath`.
+Существующая папка `assets/prufani/` будет обновлена той же структурой v1.2,
+без создания второй копии. `SharedPreferences` и Secure Storage не удаляются.
+
+4. Приведи код к форматированию и запусти проверки:
 
 ```powershell
 flutter pub get
+dart format lib/main.dart lib/core/theme/prufani_theme.dart `
+  lib/features/home lib/screens/loading_screen test/home_overview_test.dart `
+  test/startup_bootstrap_test.dart test/home_attempt_store_test.dart `
+  test/home_polish_widget_test.dart
 flutter analyze
-flutter test test/backend_models_test.dart
-flutter devices
+flutter test
 ```
 
-`flutter analyze` may reveal preexisting warnings from legacy code. The default
-`test/widget_test.dart` is Flutter boilerplate and not a valid game test.
+В проекте до патча были замечания `withOpacity`, `avoid_print` и два предупреждения
+об unused-коде в старых экранах. Важно отсутствие новых **error**, а не
+абсолютно нулевое количество старых сообщений анализатора.
 
-### Backend terminal
-
-```powershell
-cd D:\Bloger\BlogerGrameGame-backend
-docker compose up -d
-npm run db:migrate
-npm run db:seed
-npm run content:import-drafts
-notepad .env
-```
-
-Set `LOCAL_DRAFT_PREVIEW=1` in `.env`; keep `HOST=127.0.0.1` and port `8085`.
-Then restart the backend (stop previous npm run process with Ctrl+C):
-
-```powershell
-npm run dev
-```
-
-In a second PowerShell terminal:
+5. Запусти backend в отдельном PowerShell (согласно его README), проверь:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8085/health
+& "D:\Android\Sdk\platform-tools\adb.exe" reverse tcp:8085 tcp:8085
+& "D:\Android\Sdk\platform-tools\adb.exe" reverse --list
 ```
 
-### Android terminal (USB device with USB debugging)
+6. Запусти обычный Flutter entrypoint (НЕ main_api_smoke.dart):
 
 ```powershell
-adb devices
-adb reverse tcp:8085 tcp:8085
-adb reverse --list
-cd D:\Bloger\BlogerGrame
-flutter run -t lib/main_api_smoke.dart --debug `
+flutter run -d R5CY5453DEY --debug `
   --dart-define=BLOGERGRAME_API_URL=http://127.0.0.1:8085
 ```
 
-`adb reverse` lets the Android app reach the host's localhost-only backend.
-If `adb` isn't on PATH, use the copy in your Android SDK `platform-tools`.
-For Android emulator, `adb reverse` can also be used.
+`LOCAL_DRAFT_PREVIEW=1` в `.env` backend нужен только для локальных
+неопубликованных уровней. Изменять backend ради этого UI патча не требуется.
 
-## Expected manual checks
+## Проверка и коммит
 
-- New guest created only once; shows 30 coins, 5 lives and 2 hints.
-- Categories `streamers` 22, `bloggers` 8, `tiktokers` 12 with local draft preview.
-- Selecting category returns its real levels; level IDs are UUID strings.
-- Tapping an unfinished level opens the saved numeric puzzle layout. Returning
-  and tapping again fetches the **same** in-progress attempt.
-- Relaunching the debug app restores the same guest ID from secure storage.
-- If the backend is stopped, tapping refresh gives a visible connection error.
-
-To run the old app unchanged, use `flutter run -t lib/main.dart`. It still
-points to legacy endpoints and is **not** compatible with the new backend.
-
-## Safety notes
-
-- Never store the admin API key in Flutter.
-- Do not commit `.env`, access tokens, refresh tokens, or real test session logs.
-- Refresh rotates both tokens and stores them as one Secure Storage record.
-- If a refresh token is rejected, the client reports `SESSION_EXPIRED` and does
-  not silently create another user (which would lose access to the old guest).
-- Offline/time-out mutations are **not** automatically retried. Patch 02 must
-  assign and preserve UUID request IDs per keyboard press and use server replies
-  as the sole source of state.
-- Cleartext HTTP is enabled only for Android debug builds. Production needs HTTPS.
-- The backend is local-only, never make it publicly reachable without hardening.
-
-## Commit
+После ручной проверки на Samsung:
 
 ```powershell
-git add pubspec.yaml pubspec.lock android/app/src/debug/AndroidManifest.xml `
-  android/app/src/main/AndroidManifest.xml lib/core/backend lib/dev `
-  lib/main_api_smoke.dart test/backend_models_test.dart
-git commit -m "feat(flutter): add secure guest session and backend API foundation"
+git status
+git diff --check
+git add lib/main.dart lib/core/theme/prufani_theme.dart `
+  lib/features/home lib/screens/loading_screen assets/prufani `
+  pubspec.yaml test/home_overview_test.dart test/startup_bootstrap_test.dart `
+  test/home_attempt_store_test.dart test/home_polish_widget_test.dart `
+  INSTALL_WINDOWS_11.md CHANGELOG_UI_POLISH_01.md QA_UI_POLISH_01.md
+git diff --cached --stat
+git diff --cached --check
+git commit -m "feat(flutter): polish startup and home using Prufani UI kit"
+git push -u origin feat/flutter-ui-polish-01-loading-home
 ```
 
-Do not create a PR/merge until local Flutter tests and the phone API-check pass.
+Если какие-либо файлы Git пока не видит, проверь `git status`.
+Не делай `git add -A` без просмотра — рядом могут находиться временные логи.
+
+## Ограничения API/игрового экрана
+
+- `GET /api/v1/game/levels` отдаёт `completed`, но **не** `activeAttemptId`.
+  Поэтому кнопка «Продолжить» доступна только для известной этому устройству
+  серверной попытки. Её UUID хранится в SharedPreferences **по ID гостя**;
+  при запуске проверяется через `GET /api/v1/game/attempts/:id`.
+- Если попытка создана на другом устройстве или в старом диагностическом экране,
+  этот endpoint не даёт её найти. **Не изображаем её существование**.
+- «Играть» открывает настоящие уровни. Только после выбора конкретного уровня
+  создаётся/восстанавливается серверная попытка. На данный момент она
+  открывается **read-only**, поскольку интерактивная клавиатура относится
+  к следующему этапу Game UI. Сохранение попытки не списывает жизнь.
+- Магазин пока показывает реальные предложения без возможности оплаты;
+  «Загадка дня» и «Дело 404» отключены.
+- Гостевая сессия хранится прежней `GuestSessionManager` с теми же ключами;
+  временные сетевые ошибки никогда не удаляют её. При отвергнутом refresh
+  токене экран показывает ошибку вместо создания второго пользователя.
+
+## Что в ZIP не входит
+
+Нет сброса базы данных, миграций, новых endpoint'ов, новой версии игры
+или замены игровых API. Нет автоматической заливки на GitHub.

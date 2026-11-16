@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs>
+<linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#CE9FFF"/><stop offset=".5" stop-color="#884EFF"/><stop offset="1" stop-color="#5B28CE"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0.1" y2="1"><stop stop-color="#FFF4AA"/><stop offset=".35" stop-color="#FFE46B"/><stop offset=".72" stop-color="#FFBA2E"/><stop offset="1" stop-color="#F48D10"/></linearGradient>
+<linearGradient id="rose" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFB5CD"/><stop offset=".6" stop-color="#FF6692"/><stop offset="1" stop-color="#EC356D"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4D6FF"/></linearGradient>
+</defs>
+<ellipse cx="133" cy="223" rx="73" ry="10" fill="#2B1553" opacity=".13"/>
+<rect x="47" y="33" width="164" height="179" rx="23" fill="url(#card)" stroke="#7543DA" stroke-width="9"/>
+<path d="M72 36 V16 M115 36 V16 M158 36 V16" stroke="#B67AFF" stroke-width="13" stroke-linecap="round"/>
+<path d="M79 76 H177 M79 108 H177 M79 140 H139" stroke="#9167E7" stroke-width="9" stroke-linecap="round"/>
+<path d="M170 155 L209 115 L222 128 L184 169 L166 173Z" fill="url(#gold)" stroke="#C77B0B" stroke-width="5"/>
+</svg>
