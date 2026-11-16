@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/prufani_theme.dart';
-import '../domain/home_overview.dart';
+import '../../catalog/presentation/catalog_screens.dart';
 import 'home_providers.dart';
 import 'home_sheets.dart';
 import 'home_widgets.dart';
@@ -26,15 +26,22 @@ class _PrufaniHomeScreenState extends ConsumerState<PrufaniHomeScreen> {
     }
   }
 
-  Future<void> _openTab(HomeTab tab, HomeOverview? overview) async {
+  /// The home CTA is the only entry point into gameplay selection:
+  /// Home -> packs -> levels -> server-confirmed attempt.
+  /// Even "Продолжить" opens packs first, so the player can choose a pack.
+  Future<void> _openPacks() async {
+    await openPrufaniCategoriesPage(context);
+    if (!mounted) return;
+    ref.invalidate(homeOverviewProvider);
+  }
+
+  Future<void> _openTab(HomeTab tab) async {
     switch (tab) {
       case HomeTab.home:
         await _refresh();
         return;
-      case HomeTab.categories:
-        if (overview != null) {
-          await showPrufaniCategories(context, ref, overview);
-        }
+      case HomeTab.achievements:
+        await openPrufaniAchievementsPage(context);
         return;
       case HomeTab.shop:
         await showPrufaniShop(context, ref);
@@ -66,15 +73,14 @@ class _PrufaniHomeScreenState extends ConsumerState<PrufaniHomeScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: PrufaniBottomNavigation(
-                onSelect: (tab) => _openTab(tab, overview),
+                onSelect: _openTab,
               ),
             ),
           ),
         ),
         body: Stack(children: [
           Positioned.fill(
-            child: Image.asset(PrufaniAssets.background,
-                fit: BoxFit.cover),
+            child: Image.asset(PrufaniAssets.background, fit: BoxFit.cover),
           ),
           SafeArea(
             bottom: false,
@@ -86,8 +92,7 @@ class _PrufaniHomeScreenState extends ConsumerState<PrufaniHomeScreen> {
                   color: PrufaniColors.primary,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                        padding, 2, padding, 24),
+                    padding: EdgeInsets.fromLTRB(padding, 2, padding, 24),
                     children: [
                       HomeBrandHeader(
                         onSettings: () => showPrufaniSettings(context),
@@ -97,8 +102,8 @@ class _PrufaniHomeScreenState extends ConsumerState<PrufaniHomeScreen> {
                         ResourceStrip(
                           wallet: overview.wallet,
                           onCoins: () => showPrufaniShop(context, ref),
-                          onLives: () => showPrufaniLives(
-                              context, overview.wallet),
+                          onLives: () =>
+                              showPrufaniLives(context, overview.wallet),
                           onHints: () => showPrufaniShop(context, ref),
                           onRegenDue: () => _refresh(),
                         )
@@ -108,15 +113,7 @@ class _PrufaniHomeScreenState extends ConsumerState<PrufaniHomeScreen> {
                       if (overview != null)
                         PrufaniProgressCard(
                           overview: overview,
-                          onPrimaryAction: () async {
-                            if (overview.canResume) {
-                              await showPrufaniResume(
-                                  context, ref, overview);
-                            } else {
-                              await showPrufaniLevels(
-                                  context, ref, overview);
-                            }
-                          },
+                          onPrimaryAction: _openPacks,
                         )
                       else if (asyncOverview.hasError)
                         HomeErrorPanel(onRetry: _refresh)
@@ -147,7 +144,8 @@ class _ResourcePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) => Row(children: [
         for (var i = 0; i < 3; i++) ...[
           if (i > 0) const SizedBox(width: 5),
-          Expanded(child: Container(
+          Expanded(
+              child: Container(
             height: 56,
             decoration: BoxDecoration(
               color: const Color(0xFFF0E6FF),

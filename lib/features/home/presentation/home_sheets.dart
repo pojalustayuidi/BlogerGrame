@@ -25,7 +25,8 @@ Future<void> showPrufaniCategories(
             icon: categoryAsset(category.slug),
             selected: overview.category?.slug == category.slug,
             onTap: () {
-              ref.read(selectedHomeCategoryProvider.notifier).state = category.slug;
+              ref.read(selectedHomeCategoryProvider.notifier).state =
+                  category.slug;
               Navigator.of(context).pop();
             },
           ),
@@ -44,8 +45,9 @@ Future<void> showPrufaniLevels(
   await _openSheet(
     context,
     title: 'Выбрать уровень',
-    child: StatefulBuilder(builder: (sheetContext, update) =>
-      Column(mainAxisSize: MainAxisSize.min, children: [
+    child: StatefulBuilder(
+      builder: (sheetContext, update) =>
+          Column(mainAxisSize: MainAxisSize.min, children: [
         if (busy)
           const Padding(
             padding: EdgeInsets.all(6),
@@ -57,31 +59,37 @@ Future<void> showPrufaniLevels(
             child: _SheetChoice(
               title: 'Уровень ${level.number}',
               description: level.completed
-                  ? 'Пройден' : '${level.letters} букв · ${level.difficulty}',
+                  ? 'Пройден'
+                  : '${level.letters} букв · ${level.difficulty}',
               icon: categoryAsset(overview.category?.slug),
               selected: false,
-              onTap: level.completed || busy ? null : () async {
-                update(() => busy = true);
-                try {
-                  final attempt =
-                      await ref.read(startOrResumeAttemptProvider)(level.id);
-                  final playerId =
-                      await ref.read(authRepositoryProvider).getPlayerId();
-                  await ref.read(homeAttemptStoreProvider).save(playerId, attempt);
-                  ref.invalidate(homeOverviewProvider);
-                  if (!context.mounted) return;
-                  Navigator.of(context).pop();
-                  await showPrufaniAttempt(context, attempt);
-                } catch (error) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Не удалось открыть уровень: $error'),
-                    behavior: SnackBarBehavior.floating,
-                  ));
-                } finally {
-                  if (sheetContext.mounted) update(() => busy = false);
-                }
-              },
+              onTap: level.completed || busy
+                  ? null
+                  : () async {
+                      update(() => busy = true);
+                      try {
+                        final attempt = await ref
+                            .read(startOrResumeAttemptProvider)(level.id);
+                        final playerId = await ref
+                            .read(authRepositoryProvider)
+                            .getPlayerId();
+                        await ref
+                            .read(homeAttemptStoreProvider)
+                            .save(playerId, attempt);
+                        ref.invalidate(homeOverviewProvider);
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                        await showPrufaniAttempt(context, attempt);
+                      } catch (error) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Не удалось открыть уровень: $error'),
+                          behavior: SnackBarBehavior.floating,
+                        ));
+                      } finally {
+                        if (sheetContext.mounted) update(() => busy = false);
+                      }
+                    },
             ),
           ),
         if (overview.levels.isEmpty)
@@ -119,8 +127,8 @@ Future<void> showPrufaniAttempt(
     title: 'Уровень ${attempt.levelNumber}',
     child: Column(mainAxisSize: MainAxisSize.min, children: [
       Text('Статус: ${attempt.status} · Ошибки: ${attempt.mistakes}',
-        style: const TextStyle(color: PrufaniColors.primaryDark,
-            fontWeight: FontWeight.w700)),
+          style: const TextStyle(
+              color: PrufaniColors.primaryDark, fontWeight: FontWeight.w700)),
       const SizedBox(height: 13),
       Wrap(spacing: 4, runSpacing: 5, children: [
         for (final cell in attempt.layout)
@@ -135,25 +143,33 @@ Future<void> showPrufaniAttempt(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFD9C9F4)),
               ),
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(cell.given ?? cell.letter ?? '·',
-                  style: const TextStyle(fontSize: 18,
-                    fontWeight: FontWeight.w900, color: PrufaniColors.ink)),
-                Text('${cell.number ?? ''}',
-                  style: const TextStyle(fontSize: 9,
-                    color: PrufaniColors.primaryDark)),
-              ]),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(cell.given ?? cell.letter ?? '·',
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: PrufaniColors.ink)),
+                    Text('${cell.number ?? ''}',
+                        style: const TextStyle(
+                            fontSize: 9, color: PrufaniColors.primaryDark)),
+                  ]),
             )
           else
-            SizedBox(width: 14, height: 50,
-              child: Center(child: Text(cell.separator ?? ' ',
-                style: const TextStyle(color: PrufaniColors.ink)))),
+            SizedBox(
+                width: 14,
+                height: 50,
+                child: Center(
+                    child: Text(cell.separator ?? ' ',
+                        style: const TextStyle(color: PrufaniColors.ink)))),
       ]),
       const SizedBox(height: 16),
-      const Text('Это сохранённая сервером криптограмма. '
-        'Полноценную клавиатуру подключим отдельным этапом.',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 12, color: PrufaniColors.muted)),
+      const Text(
+          'Это сохранённая сервером криптограмма. '
+          'Полноценную клавиатуру подключим отдельным этапом.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, color: PrufaniColors.muted)),
     ]),
   );
 }
@@ -177,7 +193,8 @@ Future<void> showPrufaniShop(BuildContext context, WidgetRef ref) async {
         }
         final offers = snapshot.data!;
         return Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Предложения получены с сервера. Покупки добавим '
+          const Text(
+              'Предложения получены с сервера. Покупки добавим '
               'при разработке полного экрана магазина.',
               style: TextStyle(color: PrufaniColors.muted, fontSize: 12.5)),
           const SizedBox(height: 12),
@@ -259,7 +276,8 @@ Future<void> showPrufaniSettings(BuildContext context) async => _openSheet(
       child: const Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.tune_rounded, color: PrufaniColors.primary, size: 60),
         SizedBox(height: 12),
-        Text('Параметры звука, языка и уведомлений '
+        Text(
+            'Параметры звука, языка и уведомлений '
             'сделаем в отдельном экране настроек.',
             textAlign: TextAlign.center,
             style: TextStyle(color: PrufaniColors.muted)),
@@ -301,7 +319,8 @@ Future<void> showPrufaniRewards(BuildContext context) async => _openSheet(
             textAlign: TextAlign.center,
             style: TextStyle(color: PrufaniColors.ink, fontSize: 14)),
         const SizedBox(height: 7),
-        const Text('Количество монет определяет backend, '
+        const Text(
+            'Количество монет определяет backend, '
             'а не оформление главного экрана.',
             textAlign: TextAlign.center,
             style: TextStyle(color: PrufaniColors.muted, fontSize: 12)),
@@ -394,7 +413,10 @@ class _SheetChoice extends StatelessWidget {
                         style: const TextStyle(
                             color: PrufaniColors.muted, fontSize: 12)),
                   ])),
-              Icon(selected ? Icons.check_circle_rounded : Icons.chevron_right_rounded,
+              Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.chevron_right_rounded,
                   color: PrufaniColors.primaryDark),
             ]),
           ),
