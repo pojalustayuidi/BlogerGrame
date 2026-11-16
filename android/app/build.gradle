@@ -7,10 +7,10 @@ plugins {
 
 android {
     namespace "com.example.blogergrame"
-    compileSdk 34
+    compileSdk 36
 
     // ЖЁСТКО фиксируем стабильный NDK
-    ndkVersion "26.1.10909125"
+    ndkVersion "28.2.13676358"
 
     defaultConfig {
         applicationId "com.example.blogergrame"
