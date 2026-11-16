@@ -8,6 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:blogergrame/features/catalog/domain/catalog_models.dart';
+import 'package:blogergrame/features/catalog/presentation/catalog_providers.dart';
+import 'package:blogergrame/features/catalog/presentation/catalog_screens.dart';
+import 'package:blogergrame/features/game/domain/game_models.dart';
 import 'package:blogergrame/features/economy/domain/economy_models.dart';
 import 'package:blogergrame/features/home/domain/home_overview.dart';
 import 'package:blogergrame/features/home/presentation/home_providers.dart';
@@ -148,10 +151,79 @@ void main() {
     )));
     await tester.pumpAndSettle();
     expect(find.text('Главная'), findsOneWidget);
+    expect(find.text('Ачивки'), findsOneWidget);
+    expect(find.text('Магазин'), findsOneWidget);
+    expect(find.text('Профиль'), findsOneWidget);
+    // Only the large home CTA says "Играть", not a fifth navigation tab.
     expect(find.text('Играть'), findsOneWidget);
+    expect(
+        find.ancestor(
+            of: find.text('Играть'),
+            matching: find.byType(PrufaniPrimaryButton)),
+        findsOneWidget);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pump();
     expect(find.text('Больше наград!'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('bottom navigation has four destinations without Play',
+      (tester) async {
+    final choices = <HomeTab>[];
+    await tester.pumpWidget(_withRealAssets(MaterialApp(
+        home: Scaffold(
+      body: PrufaniBottomNavigation(onSelect: choices.add),
+    ))));
+    expect(find.text('Главная'), findsOneWidget);
+    expect(find.text('Ачивки'), findsOneWidget);
+    expect(find.text('Магазин'), findsOneWidget);
+    expect(find.text('Профиль'), findsOneWidget);
+    expect(find.text('Играть'), findsNothing);
+    await tester.tap(find.text('Ачивки'));
+    expect(choices, [HomeTab.achievements]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('home Continue opens pack picker even with active attempt',
+      (tester) async {
+    const attempt = PuzzleAttempt(
+      id: 'attempt-1',
+      levelId: 'level-1',
+      category: 'streamers',
+      levelNumber: 1,
+      status: 'in_progress',
+      mistakes: 0,
+      triesRemaining: 3,
+      triesPerLife: 3,
+      layout: [],
+      notes: [],
+      bonusOptions: [],
+      bonusAnswered: false,
+    );
+    final overview = HomeOverview(
+      wallet: _wallet(5),
+      categories: _categories,
+      category: _categories.first,
+      levels: _levels,
+      activeAttempt: attempt,
+    );
+    await tester.pumpWidget(_withRealAssets(ProviderScope(
+      overrides: [
+        homeOverviewProvider.overrideWith((ref) async => overview),
+        catalogCategoriesProvider.overrideWith((ref) async => [
+              PrufaniCategoryProgress(_categories.first, _levels),
+            ]),
+      ],
+      child: const MaterialApp(home: PrufaniHomeScreen()),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Продолжить'), findsOneWidget);
+    await tester.tap(find.text('Продолжить'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PrufaniCategoriesPage), findsOneWidget);
+    expect(find.text('Стримеры'), findsWidgets);
+    // No level attempt is started automatically when packs are opened.
+    expect(find.byType(PrufaniLevelsPage), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

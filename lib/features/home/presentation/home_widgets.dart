@@ -278,8 +278,8 @@ class PrufaniResourceCard extends StatelessWidget {
                         : const Color(0xFFD5BCFF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.add_rounded, size: 17,
-                      color: PrufaniColors.ink),
+                  child: const Icon(Icons.add_rounded,
+                      size: 17, color: PrufaniColors.ink),
                 ),
               ],
             ]),
@@ -323,8 +323,10 @@ class _PrufaniPrimaryButtonState extends State<PrufaniPrimaryButton> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 46),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child:
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Flexible(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -360,7 +362,6 @@ class PrufaniProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasLevels = overview.totalCount > 0;
     final number = overview.displayedLevelNumber;
     final title = overview.categoryFinished
         ? 'Всё пройдено!'
@@ -376,8 +377,10 @@ class PrufaniProgressCard extends StatelessWidget {
           colors: [Color(0xFF9360EF), Color(0xFF7042D5)],
         ),
         borderRadius: BorderRadius.circular(25),
-        boxShadow: const [BoxShadow(
-            color: Color(0x35734BC2), blurRadius: 15, offset: Offset(0, 7))],
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x35734BC2), blurRadius: 15, offset: Offset(0, 7))
+        ],
       ),
       child: Column(children: [
         Padding(
@@ -388,7 +391,8 @@ class PrufaniProgressCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('ТЕКУЩИЙ УРОВЕНЬ',
-                      style: TextStyle(fontSize: 10.5,
+                      style: TextStyle(
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFFECE4FF))),
                   const SizedBox(height: 2),
@@ -396,7 +400,8 @@ class PrufaniProgressCard extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(title,
-                        style: const TextStyle(fontSize: 26,
+                        style: const TextStyle(
+                            fontSize: 26,
                             fontWeight: FontWeight.w900,
                             color: Colors.white)),
                   ),
@@ -423,19 +428,24 @@ class PrufaniProgressCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(overview.category?.title ?? 'Категория недоступна',
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 15,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 15,
                             color: PrufaniColors.ink,
                             fontWeight: FontWeight.w900)),
-                    Text('${overview.completedCount} из ${overview.totalCount} пройдено',
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11,
-                            color: PrufaniColors.muted)),
+                    Text(
+                        '${overview.completedCount} из ${overview.totalCount} пройдено',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 11, color: PrufaniColors.muted)),
                   ],
                 ),
               ),
               Text('${overview.progressPercent}%',
-                  style: const TextStyle(fontSize: 15,
+                  style: const TextStyle(
+                      fontSize: 15,
                       fontWeight: FontWeight.w900,
                       color: PrufaniColors.primaryDark)),
             ]),
@@ -458,10 +468,12 @@ class PrufaniProgressCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: PrufaniPrimaryButton(
-                label: overview.primaryActionLabel,
-                onPressed: hasLevels && !overview.categoryFinished
-                    ? onPrimaryAction
-                    : null,
+                // Pack selection stays reachable even if the displayed
+                // category is empty or fully completed.
+                label: overview.categoryFinished || overview.totalCount == 0
+                    ? 'Выбрать пак'
+                    : overview.primaryActionLabel,
+                onPressed: onPrimaryAction,
               ),
             ),
           ]),
@@ -473,20 +485,23 @@ class PrufaniProgressCard extends StatelessWidget {
 
 /// Kept as a compatibility name for older imports in this codebase.
 class ProgressHeroCard extends StatelessWidget {
-  const ProgressHeroCard({super.key, required this.overview,
-    required this.onContinue});
+  const ProgressHeroCard(
+      {super.key, required this.overview, required this.onContinue});
   final HomeOverview overview;
   final VoidCallback onContinue;
   @override
-  Widget build(BuildContext context) => PrufaniProgressCard(
-    overview: overview, onPrimaryAction: onContinue);
+  Widget build(BuildContext context) =>
+      PrufaniProgressCard(overview: overview, onPrimaryAction: onContinue);
 }
 
 String categoryAsset(String? slug) {
   switch (slug) {
-    case 'bloggers': return PrufaniAssets.bloggers;
-    case 'tiktokers': return PrufaniAssets.tiktokers;
-    default: return PrufaniAssets.streamers;
+    case 'bloggers':
+      return PrufaniAssets.bloggers;
+    case 'tiktokers':
+      return PrufaniAssets.tiktokers;
+    default:
+      return PrufaniAssets.streamers;
   }
 }
 
@@ -495,14 +510,16 @@ class HomeFeatureCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(children: [
-        Expanded(child: _FeatureCard(
+        Expanded(
+            child: _FeatureCard(
           icon: PrufaniAssets.daily,
           title: 'Загадка дня',
           description: 'Новая цитата каждый день',
           color: const Color(0xFFFFF2D7),
         )),
         const SizedBox(width: 8),
-        Expanded(child: _FeatureCard(
+        Expanded(
+            child: _FeatureCard(
           icon: PrufaniAssets.case404,
           title: 'Дело 404',
           description: 'Особая загадка',
@@ -513,8 +530,12 @@ class HomeFeatureCards extends StatelessWidget {
 }
 
 class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({required this.icon, required this.title,
-    required this.description, required this.color, this.badge});
+  const _FeatureCard(
+      {required this.icon,
+      required this.title,
+      required this.description,
+      required this.color,
+      this.badge});
 
   final String icon;
   final String title;
@@ -537,7 +558,8 @@ class _FeatureCard extends StatelessWidget {
           child: Row(children: [
             Image.asset(icon, width: 42, height: 46, fit: BoxFit.contain),
             const SizedBox(width: 6),
-            Expanded(child: Column(
+            Expanded(
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -546,24 +568,32 @@ class _FeatureCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(title,
                       maxLines: 1,
-                      style: const TextStyle(fontSize: 14,
+                      style: const TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w900,
                           color: PrufaniColors.ink)),
                 ),
                 const SizedBox(height: 2),
-                Text(description, maxLines: 2,
+                Text(description,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 10.5,
-                        height: 1.15, color: PrufaniColors.ink)),
+                    style: const TextStyle(
+                        fontSize: 10.5,
+                        height: 1.15,
+                        color: PrufaniColors.ink)),
                 if (badge != null) ...[
                   const SizedBox(height: 3),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(color: const Color(0xFFD5BEFF),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFD5BEFF),
                         borderRadius: BorderRadius.circular(8)),
-                    child: Text(badge!, style: const TextStyle(
-                        color: PrufaniColors.primaryDark,
-                        fontSize: 9, fontWeight: FontWeight.w800)),
+                    child: Text(badge!,
+                        style: const TextStyle(
+                            color: PrufaniColors.primaryDark,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800)),
                   ),
                 ],
               ],
@@ -595,17 +625,20 @@ class HomeRewardBanner extends StatelessWidget {
               Image.asset(PrufaniAssets.crown,
                   width: 49, height: 49, fit: BoxFit.contain),
               const SizedBox(width: 5),
-              Expanded(child: Column(
+              Expanded(
+                  child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
                   Text('Больше наград!',
-                      style: TextStyle(color: Colors.white,
-                          fontSize: 15, fontWeight: FontWeight.w900)),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900)),
                   Text('Проходи уровни и получай монеты',
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.white,
-                          fontSize: 10.5)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.white, fontSize: 10.5)),
                 ],
               )),
               Image.asset(PrufaniAssets.coins,
@@ -616,55 +649,89 @@ class HomeRewardBanner extends StatelessWidget {
       );
 }
 
-enum HomeTab { home, categories, shop, profile }
+enum HomeTab { home, achievements, shop, profile }
 
+/// Four stable tabs. Pack selection is entered only through the home CTA,
+/// not through a duplicate "Играть" item in the bottom navigation.
 class PrufaniBottomNavigation extends StatelessWidget {
-  const PrufaniBottomNavigation({super.key, required this.onSelect});
+  const PrufaniBottomNavigation({
+    super.key,
+    required this.onSelect,
+    this.selectedTab = HomeTab.home,
+  });
+
   final ValueChanged<HomeTab> onSelect;
+
+  /// Detail screens may pass null so none of the main destinations is active.
+  final HomeTab? selectedTab;
 
   @override
   Widget build(BuildContext context) {
-    const tabs = [
+    const tabs = <(HomeTab, String, String)>[
       (HomeTab.home, 'Главная', PrufaniAssets.home),
-      (HomeTab.categories, 'Категории', PrufaniAssets.categories),
+      (
+        HomeTab.achievements,
+        'Ачивки',
+        'assets/prufani/icons/features/trophy.png'
+      ),
       (HomeTab.shop, 'Магазин', PrufaniAssets.shop),
       (HomeTab.profile, 'Профиль', PrufaniAssets.profile),
     ];
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 5, 12, 5),
+      margin: const EdgeInsets.fromLTRB(10, 4, 10, 5),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7EEFF),
+        color: const Color(0xFFF8EFFF),
         borderRadius: BorderRadius.circular(23),
-        border: Border.all(color: const Color(0xFFE2D2F7)),
+        border: Border.all(color: const Color(0xFFE1CBF9)),
         boxShadow: _cardShadow,
       ),
-      padding: const EdgeInsets.all(4),
       child: Row(children: [
-        for (final (tab, label, icon) in tabs)
-          Expanded(child: Material(
-            color: tab == HomeTab.home
-                ? PrufaniColors.primaryDark : Colors.transparent,
+        for (final (tab, label, asset) in tabs)
+          Expanded(
+              child: Material(
+            color: tab == selectedTab
+                ? PrufaniColors.primaryDark
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(19),
             child: InkWell(
               onTap: () => onSelect(tab),
               borderRadius: BorderRadius.circular(19),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 52),
-                child: Column(mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center, children: [
-                    SvgPicture.asset(icon, width: 20, height: 20,
-                      colorFilter: ColorFilter.mode(
-                          tab == HomeTab.home
-                              ? Colors.white : PrufaniColors.primaryDark,
-                          BlendMode.srcIn)),
-                    const SizedBox(height: 2),
-                    FittedBox(fit: BoxFit.scaleDown,
-                      child: Text(label,
-                        style: TextStyle(fontSize: 10.5,
-                            color: tab == HomeTab.home
-                                ? Colors.white : PrufaniColors.ink,
-                            fontWeight: FontWeight.w800))),
-                  ]),
+                constraints: const BoxConstraints(minHeight: 54),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1),
+                  child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        asset.endsWith('.svg')
+                            ? SvgPicture.asset(asset,
+                                width: 20,
+                                height: 20,
+                                colorFilter: ColorFilter.mode(
+                                  tab == selectedTab
+                                      ? Colors.white
+                                      : PrufaniColors.primaryDark,
+                                  BlendMode.srcIn,
+                                ))
+                            : Image.asset(asset,
+                                width: 24, height: 22, fit: BoxFit.contain),
+                        const SizedBox(height: 3),
+                        SizedBox(
+                            width: double.infinity,
+                            child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(label,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: tab == selectedTab
+                                            ? Colors.white
+                                            : PrufaniColors.ink,
+                                        fontWeight: FontWeight.w800)))),
+                      ]),
+                ),
               ),
             ),
           )),
@@ -673,25 +740,27 @@ class PrufaniBottomNavigation extends StatelessWidget {
   }
 }
 
+/// Kept to preserve existing imports and compatibility with the home feature.
 class HomeBottomNavigation extends StatelessWidget {
   const HomeBottomNavigation({super.key, required this.onSelect});
   final ValueChanged<HomeTab> onSelect;
   @override
-  Widget build(BuildContext context) => PrufaniBottomNavigation(onSelect: onSelect);
+  Widget build(BuildContext context) =>
+      PrufaniBottomNavigation(onSelect: onSelect);
 }
 
 class HomeLoadingPanel extends StatelessWidget {
   const HomeLoadingPanel({super.key});
   @override
   Widget build(BuildContext context) => Container(
-    height: 175,
-    decoration: BoxDecoration(
-      color: PrufaniColors.lavender,
-      borderRadius: BorderRadius.circular(22),
-    ),
-    child: const Center(child: CircularProgressIndicator(
-        color: PrufaniColors.primary)),
-  );
+        height: 175,
+        decoration: BoxDecoration(
+          color: PrufaniColors.lavender,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: const Center(
+            child: CircularProgressIndicator(color: PrufaniColors.primary)),
+      );
 }
 
 class HomeErrorPanel extends StatelessWidget {
@@ -700,24 +769,28 @@ class HomeErrorPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(color: PrufaniColors.lavender,
-      borderRadius: BorderRadius.circular(22)),
-    child: Column(children: [
-      const Icon(Icons.wifi_off_rounded, size: 38,
-          color: PrufaniColors.primaryDark),
-      const SizedBox(height: 8),
-      const Text('Не удалось загрузить меню', textAlign: TextAlign.center,
-          style: TextStyle(color: PrufaniColors.ink,
-              fontSize: 16, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 8),
-      const Text('Проверь соединение и попробуй снова.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: PrufaniColors.muted, fontSize: 12)),
-      const SizedBox(height: 12),
-      PrufaniPrimaryButton(label: 'Повторить', onPressed: onRetry),
-    ]),
-  );
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+            color: PrufaniColors.lavender,
+            borderRadius: BorderRadius.circular(22)),
+        child: Column(children: [
+          const Icon(Icons.wifi_off_rounded,
+              size: 38, color: PrufaniColors.primaryDark),
+          const SizedBox(height: 8),
+          const Text('Не удалось загрузить меню',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: PrufaniColors.ink,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          const Text('Проверь соединение и попробуй снова.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: PrufaniColors.muted, fontSize: 12)),
+          const SizedBox(height: 12),
+          PrufaniPrimaryButton(label: 'Повторить', onPressed: onRetry),
+        ]),
+      );
 }
 
 double clampHomePadding(double width) =>

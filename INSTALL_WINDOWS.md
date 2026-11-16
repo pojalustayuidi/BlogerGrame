@@ -1,91 +1,101 @@
-# ПРУФАНИ! — Flutter UI Patch 03 (Главный экран)
+# ПРУФАНИ! — Patch 05. Переработка категорий и выбора уровней
 
-Этот ZIP устанавливается **поверх актуального main**, в котором слит PR #2 (Clean Architecture). Не заменяйте всю папку проекта.
+## Основа
 
-## 1. Подготовка и отдельная ветка
+**Установи этот патч поверх Patch 04** в текущей локальной ветке, где уже есть:
 
-```powershell
-cd D:\Bloger\BlogerGrame
-git status
-git switch main
-git pull --ff-only
-git switch -c feat/flutter-03-prufani-home-ui
-```
+- `lib/features/catalog/presentation/catalog_screens.dart`
+- `lib/features/catalog/presentation/catalog_widgets.dart`
+- `lib/features/catalog/presentation/catalog_providers.dart`
+- `lib/features/home/presentation/home_screen.dart`
+- `lib/features/home/presentation/home_widgets.dart`
+- `assets/prufani/`
 
-Если у вас остались незакоммиченные изменения, сначала решите, что с ними делать. Не применяйте `git reset --hard`.
+На GitHub текущая локальная ветка Patch 04 может ещё не существовать — **не переключайся на `main`**, чтобы не потерять незакоммиченные изменения. Новую ветку создавать не нужно.
 
-## 2. Установка патча
+## Установка Windows 11
 
-Распакуйте ZIP **в корень** `D:\Bloger\BlogerGrame` так, чтобы файлы оказались напрямую в `lib/`, `assets/` и `test/`, а не внутри дополнительной папки `Prufani_...`.
-
-Пример, если ZIP лежит в `Downloads`:
-
-```powershell
-Expand-Archive -Path "$env:USERPROFILE\Downloads\Prufani_Flutter_Home_Patch_03.zip" -DestinationPath "D:\Bloger\BlogerGrame" -Force
-```
-
-Изменения:
-- новый `lib/main.dart` запускает `PrufaniHomeScreen` вместо старого `LoadingScreen`;
-- `lib/core/theme/prufani_theme.dart` содержит токены и пути ассетов;
-- `lib/features/home/domain/home_overview.dart` — вычисляемый прогресс по серверным уровням;
-- `lib/features/home/presentation/` — Riverpod provider, экран, виджеты, bottom sheets;
-- `assets/prufani/` — полный пользовательский Asset Kit v1.1 (PNG/SVG);
-- `pubspec.yaml` расширен только регистрацией nested assets, зависимости не менялись;
-- `test/home_overview_test.dart` — тесты подсчёта прогресса, пустых каталогов и таймера.
-
-## 3. Форматирование, тесты и диагностика
+1. Открой PowerShell и проверь, где ты находишься:
 
 ```powershell
 cd D:\Bloger\BlogerGrame
-flutter pub get
-dart format lib\main.dart lib\core\theme\prufani_theme.dart lib\features\home test\home_overview_test.dart
-flutter test test\home_overview_test.dart
+git branch --show-current
+git status --short
+```
+
+2. Для локальной резервной копии файлов Patch 04, которые заменяются:
+
+```powershell
+$backup = "D:\Bloger\Prufani_UI_Before_Patch05"
+New-Item -ItemType Directory -Force -Path $backup | Out-Null
+Copy-Item "lib\features\catalog\presentation\catalog_screens.dart" $backup -Force
+Copy-Item "lib\features\catalog\presentation\catalog_widgets.dart" $backup -Force
+Copy-Item "lib\features\home\presentation\home_screen.dart" $backup -Force
+Copy-Item "lib\features\home\presentation\home_widgets.dart" $backup -Force
+Copy-Item "test\catalog_ui_test.dart" $backup -Force
+```
+
+3. **Распакуй** `Prufani_Categories_Level_Redesign_Patch_05.zip` **в корень** `D:\Bloger\BlogerGrame`, сохраняя структуру каталогов. Согласись на замену пяти файлов. Или PowerShell:
+
+```powershell
+Expand-Archive -LiteralPath "D:\Путь\к\Prufani_Categories_Level_Redesign_Patch_05.zip" -DestinationPath "D:\Bloger\BlogerGrame" -Force
+```
+
+Если удобнее, открой архив в 7-Zip и перетащи папки `lib/` и `test/` в корень проекта. Документы `INSTALL_WINDOWS.md` и `CHANGELOG_PATCH_05.md` — справочные.
+
+## Форматирование и проверка
+
+```powershell
+cd D:\Bloger\BlogerGrame
+
+dart format lib\features\catalog\presentation lib\features\home\presentation\home_screen.dart lib\features\home\presentation\home_widgets.dart test\catalog_ui_test.dart
+
+flutter test test\catalog_ui_test.dart -r expanded
 flutter test
-flutter analyze
+flutter analyze --no-pub
 ```
 
-В `flutter analyze` пока могут отображаться 81 старое замечание из legacy UI. **Новые ошибки компиляции появляться не должны.** Если появились — сохраните вывод; не делайте коммит, пока не исправим.
+Если в анализаторе появились `error` или `warning`, пришли полный текст. В процессе создания патча Flutter SDK на сервере не установлен, тесты здесь запустить невозможно.
 
-## 4. Проверка на физическом телефоне
+## Запуск на Samsung S25+
 
-Backend должен быть запущен на локальном ПК: `http://127.0.0.1:8085`. Для 42 черновых уровней в backend `.env` нужен `LOCAL_DRAFT_PREVIEW=1` (на локальной машине).
+Убедись, что Node.js backend и PostgreSQL запущены, а `http://127.0.0.1:8085` доступен с компьютера.
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8085/health
+& "D:\Android\Sdk\platform-tools\adb.exe" devices
 & "D:\Android\Sdk\platform-tools\adb.exe" reverse tcp:8085 tcp:8085
-flutter run -d R5CY5453DEY --debug --dart-define=BLOGERGRAME_API_URL=http://127.0.0.1:8085
+
+flutter run -d R5CY5453DEY --debug `
+  --dart-define=BLOGERGRAME_API_URL=http://127.0.0.1:8085
 ```
 
-Обратите внимание: **без** `-t lib/main_api_smoke.dart`: теперь проверяем **основной запуск** `lib/main.dart`.
+`APP_ENV=local` и `LOCAL_DRAFT_PREVIEW=1` нужны для локальных черновых уровней, если они не опубликованы.
 
-Примеры проверок:
-- отображается оригинальный логотип «ПРУФАНИ!» и три ресурсные карточки;
-- баланс, жизни, подсказки взяты из backend, не зашиты в дизайн;
-- отображается категория и процент реального прохождения (у нового игрока обычно 0%, а не 40% из концепта);
-- «Категории» открывает список из backend, переключение меняет активную категорию;
-- «Магазин» открывает реальные предложения в режиме просмотра (покупки ещё не реализованы);
-- «Профиль» показывает актуальный гостевой ID;
-- «Продолжить» пока показывает описание следующего уровня: игровой экран подключим отдельным патчем;
-- «Загадка дня» и «Дело 404» честно отмечены как будущие функции;
-- работают pull-to-refresh и повторная загрузка при ошибках сети.
+## Проверка глазами
 
-Старое меню, провайдеры и старый экран игры **намеренно не удалены**, хотя теперь не участвуют в стартовом маршруте. Их будем убирать после миграции всей игры.
+1. Внизу на главной **5 вкладок**: `Главная`, `Играть`, `Ачивки`, `Магазин`, `Профиль`.
+2. Вкладка `Играть` открывает **выбор паков**. Фактические `Стримеры`, `Блогеры`, `Тиктокеры` приходят из `/categories`; неподдерживаемый `Микс` не добавляется.
+3. У карточек паков отображается фактическое `пройдено/всего` и жёлтый прогресс.
+4. Нажатие на пак открывает **полную страницу уровней**.
+5. На уровне есть шапка категории, звезда рядом с прогрессом, сетка уровней со звёздами под номерами, пагинация по 20 заданий, закреплённая жёлтая кнопка.
+6. Готовые задания фиолетовые и с галочкой, текущий рекомендуемый/сохранённый уровень — жёлтый, остальные доступные — светло-лавандовые.
+7. Проверить 360–412 dp, увеличенный системный шрифт, вертикальный скролл, 0 и 5 жизней, отключённый backend и повторное подключение.
+8. При выборе уровня используется реальный API `startOrResumeAttempt`; если есть совпадающий сохранённый attempt — `GET /attempts/{id}`. Затем открывается существующий просмотр криптограммы. Клавиатура — отдельный следующий этап.
 
-## 5. Коммит и PR
+## Ограничения backend
+
+`GET /levels` не сообщает **число звёзд за уровень** и **причины блокировок**. Три звезды на завершённой плитке — декоративный признак прохождения, а не серверная оценка. Незаполненные плитки **не имеют искусственных замков** — сервер разрешает выбор любого незавершённого уровня. Для ачивок пока отсутствует API — вкладка показывает `Скоро` без выдуманных достижений.
+
+## Коммит в той же ветке
+
+После успешной проверки:
 
 ```powershell
-git status
 git add -A
 git diff --cached --check
 git diff --cached --stat
-git commit -m "feat(flutter): build prufani home screen with server-backed progress"
-git push -u origin feat/flutter-03-prufani-home-ui
+git commit -m "feat(flutter): redesign Prufani packs and level selection"
+git push
 ```
 
-После успешного push создайте PR в `main`, протестируйте сборку и слейте.
-
-## Ограничения этапа
-
-Это **UI-патч главного экрана**, а не завершённый игровой flow. В целях безопасности не подключается старая механика, которая могла бы списывать жизни не через новый backend. Контракт `GameNotifier` и переход на экран криптограммы сделаем следующим этапом.
-
-В среде подготовки архива Flutter SDK не установлен, поэтому фактическую компиляцию и widget-тесты необходимо выполнить локально.
+Если ветка ещё не привязана к `origin`, выполняй `git push -u origin <имя-текущей-ветки>` после проверки `git branch --show-current`.

@@ -5,7 +5,8 @@ import '../../catalog/domain/catalog_models.dart';
 import '../data/home_attempt_store.dart';
 import '../domain/home_overview.dart';
 
-final selectedHomeCategoryProvider = StateProvider<String?>((ref) => 'streamers');
+final selectedHomeCategoryProvider =
+    StateProvider<String?>((ref) => 'streamers');
 
 final homeAttemptStoreProvider =
     Provider<HomeAttemptStore>((ref) => HomeAttemptStore());
