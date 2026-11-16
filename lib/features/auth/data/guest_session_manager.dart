@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
-import 'backend_exception.dart';
+import '../../../core/network/backend_exception.dart';
+import '../../../core/network/access_token_source.dart';
 import 'secure_session_store.dart';
 
 /// Owns a single guest session. Never silently creates a different player
 /// when a stored refresh token is rejected by the backend.
-class GuestSessionManager {
+class GuestSessionManager implements AccessTokenSource {
   final Dio _publicDio;
   final SecureSessionStore _store;
   StoredGuestSession? _current;
@@ -13,6 +14,13 @@ class GuestSessionManager {
   Future<StoredGuestSession>? _refreshing;
 
   GuestSessionManager(this._publicDio, this._store);
+
+  @override
+  Future<String> getAccessToken() async => (await ensureSession()).accessToken;
+
+  @override
+  Future<String> recoverFromUnauthorized(String usedAccessToken) async =>
+      (await refreshAfterUnauthorized(usedAccessToken)).accessToken;
 
   Future<StoredGuestSession> ensureSession() {
     final active = _initializing;
