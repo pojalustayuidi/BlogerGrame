@@ -28,7 +28,6 @@ class _PrufaniHomeScreenState extends ConsumerState<PrufaniHomeScreen> {
 
   /// The home CTA is the only entry point into gameplay selection:
   /// Home -> packs -> levels -> server-confirmed attempt.
-  /// Even "Продолжить" opens packs first, so the player can choose a pack.
   Future<void> _openPacks() async {
     await openPrufaniCategoriesPage(context);
     if (!mounted) return;

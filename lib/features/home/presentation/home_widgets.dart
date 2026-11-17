@@ -308,7 +308,9 @@ class _PrufaniPrimaryButtonState extends State<PrufaniPrimaryButton> {
   @override
   Widget build(BuildContext context) => AnimatedScale(
         scale: _pressed ? 0.975 : 1,
-        duration: const Duration(milliseconds: 110),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 110),
         child: Material(
           color: widget.onPressed == null
               ? const Color(0xFFE0D9D6)
@@ -321,7 +323,7 @@ class _PrufaniPrimaryButtonState extends State<PrufaniPrimaryButton> {
             onTap: widget.onPressed,
             borderRadius: BorderRadius.circular(17),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 46),
+              constraints: const BoxConstraints(minHeight: 48),
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -339,9 +341,11 @@ class _PrufaniPrimaryButtonState extends State<PrufaniPrimaryButton> {
                           )),
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  const Icon(Icons.arrow_forward_rounded,
-                      size: 19, color: PrufaniColors.ink),
+                  if (widget.onPressed != null) ...[
+                    const SizedBox(width: 5),
+                    const Icon(Icons.arrow_forward_rounded,
+                        size: 19, color: PrufaniColors.ink),
+                  ],
                 ]),
               ),
             ),
@@ -390,11 +394,16 @@ class PrufaniProgressCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('ТЕКУЩИЙ УРОВЕНЬ',
-                      style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFECE4FF))),
+                  Text(
+                    overview.canResume && !overview.categoryFinished
+                        ? 'В ПРОЦЕССЕ'
+                        : 'ТЕКУЩИЙ УРОВЕНЬ',
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFECE4FF),
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   FittedBox(
                     fit: BoxFit.scaleDown,
@@ -468,11 +477,7 @@ class PrufaniProgressCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: PrufaniPrimaryButton(
-                // Pack selection stays reachable even if the displayed
-                // category is empty or fully completed.
-                label: overview.categoryFinished || overview.totalCount == 0
-                    ? 'Выбрать пак'
-                    : overview.primaryActionLabel,
+                label: 'Выбрать категорию',
                 onPressed: overview.wallet.lives > 0 ? onPrimaryAction : null,
               ),
             ),

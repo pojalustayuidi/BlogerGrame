@@ -42,8 +42,6 @@ class HomeOverview {
   int? get displayedLevelNumber =>
       canResume ? activeAttempt!.levelNumber : nextLevel?.number;
 
-  String get primaryActionLabel => canResume ? 'Продолжить' : 'Играть';
-
   static GameCategory? resolveCategory(
       List<GameCategory> categories, String? preferred) {
     if (categories.isEmpty) return null;
