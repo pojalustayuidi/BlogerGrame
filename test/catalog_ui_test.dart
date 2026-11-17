@@ -36,78 +36,61 @@ void main() {
     expect(partial.percent, 50);
   });
 
-  test('pagination has twenty tiles and handles all boundaries', () {
-    final list = List.generate(42, (index) => _level(index + 1));
-    expect(levelPageCount(0), 1);
-    expect(levelPageCount(20), 1);
-    expect(levelPageCount(21), 2);
-    expect(levelPageCount(42), 3);
-    expect(levelsForPage(list, 0).length, 20);
-    expect(levelsForPage(list, 0).last.number, 20);
-    expect(levelsForPage(list, 1).first.number, 21);
-    expect(levelsForPage(list, 2).length, 2);
-    expect(levelsForPage(list, -1), isEmpty);
-    expect(levelsForPage(list, 3), isEmpty);
-  });
-
-  testWidgets('completed tile shows a check and three gold star motifs',
+  testWidgets('a completed tile shows completion without a star rating',
       (tester) async {
-    await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-      body: SizedBox(
-        width: 130,
-        height: 120,
-        child: PrufaniLevelTile(
-          level: _level(7, completed: true),
-          isActive: false,
-          onTap: null,
-        ),
-      ),
-    )));
+    await tester.pumpWidget(_tile(
+      level: _level(7, completed: true),
+      status: PrufaniLevelTileStatus.completed,
+    ));
+
     expect(find.text('7'), findsOneWidget);
     expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.star_rounded), findsNWidgets(3));
+    expect(find.byIcon(Icons.star_rounded), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('active attempt highlights current level and remains tappable',
-      (tester) async {
+  testWidgets('a saved attempt remains tappable', (tester) async {
     var taps = 0;
-    await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-      body: SizedBox(
-        width: 125,
-        height: 110,
-        child: PrufaniLevelTile(
-          level: _level(3),
-          isActive: true,
-          onTap: () => taps++,
-        ),
-      ),
-    )));
-    expect(find.byIcon(Icons.play_circle_fill_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
+    await tester.pumpWidget(_tile(
+      level: _level(3),
+      status: PrufaniLevelTileStatus.resume,
+      onTap: () => taps++,
+    ));
+
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     await tester.tap(find.text('3'));
     expect(taps, 1);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('available tile shows a number and three outline stars',
-      (tester) async {
-    await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-      body: SizedBox(
-        width: 100,
-        height: 95,
-        child: PrufaniLevelTile(
-          level: _level(15),
-          isActive: false,
-          onTap: () {},
-        ),
-      ),
-    )));
-    expect(find.text('15'), findsOneWidget);
-    expect(find.byIcon(Icons.star_border_rounded), findsNWidgets(3));
-    expect(tester.takeException(), isNull);
+  testWidgets('a locked tile is announced as locked', (tester) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      await tester.pumpWidget(_tile(
+        level: _level(15),
+        status: PrufaniLevelTileStatus.locked,
+      ));
+
+      expect(find.bySemanticsLabel('Уровень 15, закрыт'), findsOneWidget);
+      expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    } finally {
+      semantics.dispose();
+    }
   });
 }
+
+Widget _tile({
+  required LevelSummary level,
+  required PrufaniLevelTileStatus status,
+  VoidCallback? onTap,
+}) =>
+    MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 58,
+          height: 62,
+          child: PrufaniLevelTile(level: level, status: status, onTap: onTap),
+        ),
+      ),
+    );

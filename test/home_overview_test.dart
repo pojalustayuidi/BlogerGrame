@@ -47,7 +47,7 @@ PuzzleAttempt activeAttempt({String status = 'in_progress', String category = 's
     );
 
 void main() {
-  test('no stored attempt means Играть, not a fabricated Continue', () {
+  test('no stored attempt shows the first unfinished level', () {
     final home = HomeOverview(
       wallet: wallet,
       categories: categories,
@@ -55,11 +55,10 @@ void main() {
       levels: [summary(1), summary(2)],
     );
     expect(home.canResume, false);
-    expect(home.primaryActionLabel, 'Играть');
     expect(home.displayedLevelNumber, 1);
   });
 
-  test('server-validated matching active attempt means Продолжить', () {
+  test('the validated matching attempt supplies the displayed level', () {
     final home = HomeOverview(
       wallet: wallet,
       categories: categories,
@@ -68,11 +67,10 @@ void main() {
       activeAttempt: activeAttempt(),
     );
     expect(home.canResume, true);
-    expect(home.primaryActionLabel, 'Продолжить');
     expect(home.displayedLevelNumber, 2);
   });
 
-  test('solved or other-category attempt never shows Продолжить', () {
+  test('solved or other-category attempt cannot be resumed', () {
     HomeOverview withAttempt(PuzzleAttempt attempt) => HomeOverview(
       wallet: wallet,
       categories: categories,

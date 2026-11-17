@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,12 +8,21 @@ import '../../../core/di/backend_providers.dart';
 import '../../../core/theme/prufani_theme.dart';
 import '../../economy/domain/economy_models.dart';
 import '../../game/domain/game_models.dart';
+import '../../game/presentation/game_screen.dart';
 import '../../home/presentation/home_providers.dart';
 import '../../home/presentation/home_sheets.dart';
 import '../../home/presentation/home_widgets.dart';
 import '../domain/catalog_models.dart';
+import 'catalog_access_rules.dart';
 import 'catalog_providers.dart';
 import 'catalog_widgets.dart';
+
+const _catalogTitleStyle = TextStyle(
+  color: PrufaniColors.ink,
+  fontSize: 25,
+  fontWeight: FontWeight.w900,
+  height: 1.15,
+);
 
 /// These are the *same* routes as Patch 04, redesigned in-place.
 Future<void> openPrufaniCategoriesPage(BuildContext context) =>
@@ -69,7 +80,7 @@ class PrufaniCategoriesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final packsAsync = ref.watch(catalogCategoriesProvider);
-    final wallet = ref.watch(homeOverviewProvider).asData?.value.wallet;
+    final wallet = ref.watch(homeOverviewProvider).valueOrNull?.wallet;
     return _CatalogScaffold(
       bottomNavigation: PrufaniBottomNavigation(
         // This is a nested game screen, not a fifth main tab.
@@ -81,65 +92,39 @@ class PrufaniCategoriesPage extends ConsumerWidget {
         onRefresh: () => _refresh(ref),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(13, 6, 13, 26),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
           children: [
             _CatalogTopBar(
               wallet: wallet,
               onBack: () => Navigator.of(context).pop(),
               onCoins: () => showPrufaniShop(context, ref),
-              onLives: wallet == null
-                  ? null
-                  : () => showPrufaniLives(context, wallet),
+              onLives:
+                  wallet == null ? null : () => showPrufaniLives(context, wallet),
             ),
-            const SizedBox(height: 13),
-            const _CategoriesHero(),
-            const SizedBox(height: 15),
+            const SizedBox(height: 14),
+            const Text('Категории', style: _catalogTitleStyle),
+            const SizedBox(height: 14),
             packsAsync.when(
+              skipLoadingOnReload: true,
               loading: () => const _CatalogLoading(),
               error: (_, __) => _CatalogFailure(
-                title: 'Не удалось загрузить паки',
+                title: 'Не удалось загрузить категории',
                 onRetry: () => _refresh(ref),
               ),
               data: (items) {
                 if (items.isEmpty) {
                   return const _CatalogEmpty('Пока нет доступных категорий.');
                 }
-                return LayoutBuilder(builder: (context, constraints) {
-                  final twoColumns = constraints.maxWidth >= 315;
-                  return Column(children: [
-                    for (var index = 0; index < items.length; index += 2) ...[
-                      if (index + 1 < items.length && twoColumns)
-                        Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                  child: _packCard(context, ref, items[index])),
-                              const SizedBox(width: 11),
-                              Expanded(
-                                  child: _packCard(
-                                      context, ref, items[index + 1])),
-                            ])
-                      else
-                        _packCard(context, ref, items[index], wide: twoColumns),
-                      const SizedBox(height: 13),
-                      if (!twoColumns && index + 1 < items.length) ...[
-                        _packCard(context, ref, items[index + 1], wide: true),
-                        const SizedBox(height: 13),
-                      ],
-                    ],
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(13, 4, 13, 0),
-                      child: Text(
-                        'Выбирай любимый пак, проходи уровни и открывай новые цитаты!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: PrufaniColors.muted,
-                            height: 1.3,
-                            fontSize: 12.5),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final item in items)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _packCard(context, ref, item),
                       ),
-                    ),
-                  ]);
-                });
+                  ],
+                );
               },
             ),
           ],
@@ -149,11 +134,13 @@ class PrufaniCategoriesPage extends ConsumerWidget {
   }
 
   Widget _packCard(
-          BuildContext context, WidgetRef ref, PrufaniCategoryProgress progress,
-          {bool wide = false}) =>
+    BuildContext context,
+    WidgetRef ref,
+    PrufaniCategoryProgress progress,
+  ) =>
       PrufaniCategoryCard(
+        key: ValueKey(progress.category.slug),
         progress: progress,
-        wide: wide,
         onTap: progress.isEmpty
             ? null
             : () async {
@@ -188,7 +175,8 @@ class PrufaniLevelsPage extends ConsumerStatefulWidget {
 
 class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
   bool _opening = false;
-  int? _chosenPage;
+  final _recommendedTile = GlobalKey();
+  bool _revealedRecommendedTile = false;
 
   Future<void> _refresh() async {
     ref.invalidate(catalogLevelsProvider(widget.categorySlug));
@@ -203,8 +191,24 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
   Future<void> _openLevel(
       LevelSummary level, PuzzleAttempt? knownAttempt) async {
     if (_opening || level.completed) return;
+    final available =
+        ref.read(catalogLevelsProvider(widget.categorySlug)).valueOrNull;
+    if (available == null ||
+        !mayStartLevel(level: level, levels: available, lives: 1)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Сначала пройди предыдущий уровень.')));
+      return;
+    }
     setState(() => _opening = true);
     try {
+      final currentWallet = await ref.read(economyRepositoryProvider).wallet();
+      if (!mounted) return;
+      if (currentWallet.lives <= 0) {
+        ref.invalidate(homeOverviewProvider);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Нет жизней. Дождись восстановления.')));
+        return;
+      }
       final game = ref.read(gameRepositoryProvider);
       final start = ref.read(startOrResumeAttemptProvider);
       final auth = ref.read(authRepositoryProvider);
@@ -218,7 +222,11 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
       await store.save(playerId, attempt);
       if (!mounted) return;
       ref.invalidate(homeOverviewProvider);
-      await showPrufaniAttempt(context, attempt);
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => PrufaniGameScreen(initialAttempt: attempt),
+        ),
+      );
       if (mounted) await _refresh();
     } catch (error) {
       if (!mounted) return;
@@ -247,107 +255,155 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
     }
   }
 
+  void _revealRecommendedTile() {
+    if (_revealedRecommendedTile) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _revealedRecommendedTile) return;
+      final tile = _recommendedTile.currentContext;
+      if (tile == null) return;
+      _revealedRecommendedTile = true;
+      unawaited(Scrollable.ensureVisible(
+        tile,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      ));
+    });
+  }
+
+  Widget? _bottomAction({
+    required List<LevelSummary>? levels,
+    required LevelSummary? nextLevel,
+    required PuzzleAttempt? activeAttempt,
+    required GameWallet? wallet,
+    required bool walletFailed,
+  }) {
+    if (_opening) {
+      return const _LevelBottomAction('Открываем уровень…');
+    }
+    if (levels == null) {
+      return const _LevelBottomAction('Загружаем уровни…');
+    }
+    if (levels.isEmpty) return null;
+    if (nextLevel == null) {
+      return const _LevelBottomAction('Все уровни пройдены');
+    }
+    if (wallet == null) {
+      if (walletFailed) {
+        return _LevelBottomAction(
+          'Повторить',
+          detail: 'Не удалось проверить жизни.',
+          onTap: _refresh,
+        );
+      }
+      return const _LevelBottomAction('Проверяем жизни…');
+    }
+    if (wallet.lives <= 0) {
+      return _LevelBottomAction(
+        'Нет жизней',
+        detail: _lifeRecoveryLabel(wallet.nextLifeAt),
+      );
+    }
+    return _LevelBottomAction(
+      activeAttempt == null
+          ? 'Играть · уровень ${nextLevel.number}'
+          : 'Продолжить уровень ${nextLevel.number}',
+      onTap: () => _openLevel(nextLevel, activeAttempt),
+    );
+  }
+
+  String _lifeRecoveryLabel(DateTime? deadline) {
+    if (deadline == null) return 'Жизни восстанавливаются автоматически.';
+    if (!deadline.isAfter(DateTime.now())) {
+      return 'Потяни список вниз, чтобы проверить жизни.';
+    }
+    final time = MaterialLocalizations.of(context).formatTimeOfDay(
+      TimeOfDay.fromDateTime(deadline.toLocal()),
+      alwaysUse24HourFormat: true,
+    );
+    return 'Следующая жизнь в $time';
+  }
+
   @override
   Widget build(BuildContext context) {
     final levelsAsync = ref.watch(catalogLevelsProvider(widget.categorySlug));
-    final wallet = ref.watch(homeOverviewProvider).asData?.value.wallet;
-    final saved = ref.watch(homeOverviewProvider).asData?.value.activeAttempt;
-    final matchingAttempt =
-        saved?.category == widget.categorySlug && saved?.status == 'in_progress'
-            ? saved
-            : null;
-    final ordered = levelsAsync.asData?.value.toList()
+    final homeAsync = ref.watch(homeOverviewProvider);
+    final wallet = homeAsync.valueOrNull?.wallet;
+    final saved = homeAsync.valueOrNull?.activeAttempt;
+    final ordered = levelsAsync.valueOrNull?.toList()
       ?..sort((a, b) => a.number.compareTo(b.number));
-    final pending = ordered == null
-        ? const <LevelSummary>[]
-        : ordered.where((level) => !level.completed).toList();
-    LevelSummary? selectedLevel;
-    if (pending.isNotEmpty) {
-      selectedLevel = pending.first;
-      if (matchingAttempt != null) {
-        for (final level in pending) {
-          if (level.id == matchingAttempt.levelId) {
-            selectedLevel = level;
-            break;
-          }
-        }
-      }
-    }
-    final selectedIndex = selectedLevel == null || ordered == null
-        ? 0
-        : ordered.indexWhere((level) => level.id == selectedLevel!.id);
-    final pageCount = levelPageCount(ordered?.length ?? 0);
-    final page = (_chosenPage ??
-            (selectedIndex < 0 ? 0 : selectedIndex ~/ prufaniLevelsPerPage))
-        .clamp(0, pageCount - 1)
-        .toInt();
-    final visible =
-        ordered == null ? <LevelSummary>[] : levelsForPage(ordered, page);
+    final nextLevel = nextPlayableLevel(ordered ?? const []);
+    final activeAttempt = saved != null &&
+            saved.category == widget.categorySlug &&
+            saved.status == 'in_progress' &&
+            saved.levelId == nextLevel?.id
+        ? saved
+        : null;
 
     return _CatalogScaffold(
-      bottomAction: _LevelBottomAction(
-        active: matchingAttempt != null &&
-            selectedLevel?.id == matchingAttempt.levelId,
-        enabled: !_opening && selectedLevel != null,
-        onTap: selectedLevel == null
-            ? null
-            : () => _openLevel(
-                  selectedLevel!,
-                  matchingAttempt?.levelId == selectedLevel!.id
-                      ? matchingAttempt
-                      : null,
-                ),
-      ),
-      child: RefreshIndicator(
-        onRefresh: _refresh,
-        color: PrufaniColors.primary,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(13, 6, 13, 15),
+      bottomAction: levelsAsync.hasError
+          ? null
+          : _bottomAction(
+              levels: ordered,
+              nextLevel: nextLevel,
+              activeAttempt: activeAttempt,
+              wallet: wallet,
+              walletFailed: homeAsync.hasError,
+            ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _CatalogTopBar(
               wallet: wallet,
               onBack: () => Navigator.of(context).pop(),
               onCoins: () => showPrufaniShop(context, ref),
-              onLives: wallet == null
-                  ? null
-                  : () => showPrufaniLives(context, wallet),
+              onLives:
+                  wallet == null ? null : () => showPrufaniLives(context, wallet),
             ),
-            const SizedBox(height: 11),
-            _LevelHero(
+            const SizedBox(height: 12),
+            _LevelHeader(
               slug: widget.categorySlug,
-              title:
-                  widget.categoryTitle ?? _categoryTitle(widget.categorySlug),
+              title: widget.categoryTitle ?? _categoryTitle(widget.categorySlug),
               completed: ordered?.where((level) => level.completed).length ?? 0,
               total: ordered?.length ?? 0,
             ),
-            const SizedBox(height: 12),
-            if (_opening) ...[
-              const LinearProgressIndicator(
-                  color: PrufaniColors.primary, minHeight: 3),
-              const SizedBox(height: 7),
-            ],
-            levelsAsync.when(
-              loading: () => const _CatalogLoading(),
-              error: (_, __) => _CatalogFailure(
-                  title: 'Не удалось загрузить уровни', onRetry: _refresh),
-              data: (data) => data.isEmpty
-                  ? const _CatalogEmpty('В этом паке пока нет уровней.')
-                  : _LevelBoard(
-                      levels: visible,
-                      page: page,
-                      pageCount: pageCount,
-                      recommendedId: selectedLevel?.id,
-                      activeAttempt: matchingAttempt,
-                      opening: _opening,
-                      onPage: (next) => setState(() => _chosenPage = next),
-                      onLevel: (level) => _openLevel(
-                        level,
-                        matchingAttempt?.levelId == level.id
-                            ? matchingAttempt
-                            : null,
+            const SizedBox(height: 14),
+            Expanded(
+              child: RefreshIndicator(
+                color: PrufaniColors.primary,
+                onRefresh: _refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 16),
+                  children: [
+                    levelsAsync.when(
+                      skipLoadingOnReload: true,
+                      loading: () => const _CatalogLoading(),
+                      error: (_, __) => _CatalogFailure(
+                        title: 'Не удалось загрузить уровни',
+                        onRetry: _refresh,
                       ),
+                      data: (data) {
+                        if (data.isEmpty) {
+                          return const _CatalogEmpty(
+                            'В этой категории пока нет уровней.',
+                          );
+                        }
+                        if (nextLevel != null) _revealRecommendedTile();
+                        return _LevelBoard(
+                          levels: ordered ?? data,
+                          recommendedId: nextLevel?.id,
+                          recommendedTile: _recommendedTile,
+                          resuming: activeAttempt != null,
+                          opening: _opening,
+                          lives: wallet?.lives,
+                          onLevel: (level) => _openLevel(level, activeAttempt),
+                        );
+                      },
                     ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -498,344 +554,171 @@ class _TinyResourcePill extends StatelessWidget {
       );
 }
 
-class _CategoriesHero extends StatelessWidget {
-  const _CategoriesHero();
+class _LevelHeader extends StatelessWidget {
+  const _LevelHeader({
+    required this.slug,
+    required this.title,
+    required this.completed,
+    required this.total,
+  });
 
-  @override
-  Widget build(BuildContext context) => Column(children: [
-        Container(
-          height: 107,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-                colors: [Color(0xFF9F58ED), Color(0xFF6930C5)]),
-            borderRadius: BorderRadius.circular(29),
-            border: Border.all(color: const Color(0xC9FFFFFF), width: 1.5),
-            boxShadow: catalogCardShadow,
-          ),
-          child: Stack(children: [
-            Positioned(
-                top: -12,
-                right: 15,
-                child: Opacity(
-                    opacity: .75,
-                    child: Image.asset(PrufaniAssets.crown,
-                        width: 67, height: 64))),
-            Center(
-                child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 11),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text.rich(
-                    TextSpan(children: const [
-                      TextSpan(
-                          text: 'Выбери ',
-                          style: TextStyle(color: Colors.white)),
-                      TextSpan(
-                          text: 'категорию',
-                          style: TextStyle(color: Color(0xFFFFE066))),
-                    ]),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      shadows: [
-                        Shadow(
-                            color: Color(0x5D34187B),
-                            blurRadius: 4,
-                            offset: Offset(0, 3))
-                      ],
-                    )),
-              ),
-            )),
-          ]),
-        ),
-        const SizedBox(height: 9),
-        const Text('Угадывай цитаты любимых авторов и получай награды!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 12.5,
-                height: 1.3,
-                color: PrufaniColors.primaryDark,
-                fontWeight: FontWeight.w700)),
-      ]);
-}
-
-class _LevelHero extends StatelessWidget {
-  const _LevelHero(
-      {required this.slug,
-      required this.title,
-      required this.completed,
-      required this.total});
   final String slug;
   final String title;
   final int completed;
   final int total;
 
   @override
-  Widget build(BuildContext context) {
-    final fraction = total == 0 ? 0.0 : completed / total;
-    return Container(
-      height: 162,
-      padding: const EdgeInsets.fromLTRB(15, 15, 15, 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: slug == 'streamers'
-              ? const [Color(0xFF9C50EC), Color(0xFF6527CC)]
-              : categoryGradient(slug),
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(27),
-        border: Border.all(color: const Color(0xD1FFFFFF)),
-        boxShadow: catalogCardShadow,
-      ),
-      child: Column(children: [
-        Expanded(
-            child: Row(children: [
-          Expanded(
-              child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(title,
-                      style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w900,
-                          color: slug == 'streamers'
-                              ? Colors.white
-                              : PrufaniColors.ink))),
-              const SizedBox(height: 5),
-              Text(categoryCaption(slug),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: slug == 'streamers'
-                          ? const Color(0xFFF1E1FF)
-                          : PrufaniColors.primaryDark,
-                      fontSize: 12.5,
-                      height: 1.25,
-                      fontWeight: FontWeight.w600)),
-            ],
-          )),
-          Image.asset(categoryIllustration(slug),
-              width: 100, height: 93, fit: BoxFit.contain),
-        ])),
-        const SizedBox(height: 8),
-        Row(children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-            decoration: BoxDecoration(
-                color: const Color(0xFFFDF4FF),
-                borderRadius: BorderRadius.circular(17)),
-            child: Row(children: [
-              Image.asset('assets/prufani/icons/resources/star.png',
-                  width: 20, height: 20),
-              const SizedBox(width: 4),
-              Text('$completed/$total',
-                  style: const TextStyle(
-                      color: PrufaniColors.ink,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12)),
-            ]),
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-              child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: fraction),
-            duration: const Duration(milliseconds: 480),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) => ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: LinearProgressIndicator(
-                value: value.clamp(0.0, 1.0).toDouble(),
-                minHeight: 12,
-                backgroundColor: const Color(0x663E1365),
-                color: const Color(0xFFFFD52D),
-              ),
-            ),
-          )),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-                color: const Color(0xE9FAE8FF),
-                borderRadius: BorderRadius.circular(13)),
-            child: Text('${(fraction * 100).round()}%',
-                style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: PrufaniColors.primaryDark)),
-          ),
-        ]),
-      ]),
-    );
-  }
-}
-
-class _LevelBoard extends StatelessWidget {
-  const _LevelBoard(
-      {required this.levels,
-      required this.page,
-      required this.pageCount,
-      required this.recommendedId,
-      required this.activeAttempt,
-      required this.opening,
-      required this.onPage,
-      required this.onLevel});
-  final List<LevelSummary> levels;
-  final int page;
-  final int pageCount;
-  final String? recommendedId;
-  final PuzzleAttempt? activeAttempt;
-  final bool opening;
-  final ValueChanged<int> onPage;
-  final ValueChanged<LevelSummary> onLevel;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(12, 15, 12, 12),
+  Widget build(BuildContext context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFFF8EFFF),
-          borderRadius: BorderRadius.circular(27),
-          border: Border.all(color: Colors.white, width: 1.5),
-          boxShadow: catalogCardShadow,
+          color: categorySurface(slug),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xCBFFFFFF)),
         ),
-        child: Column(children: [
-          LayoutBuilder(builder: (context, constraints) {
-            final columns = constraints.maxWidth < 290 ? 4 : 5;
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: levels.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                mainAxisExtent: columns == 5 ? 91 : 94,
-                mainAxisSpacing: 9,
-                crossAxisSpacing: 7,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 11, 14, 11),
+          child: Row(
+            children: [
+              Image.asset(
+                categoryIllustration(slug),
+                width: 46,
+                height: 46,
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
               ),
-              itemBuilder: (context, index) {
-                final level = levels[index];
-                final isActive = activeAttempt?.levelId == level.id;
-                return PrufaniLevelTile(
-                  key: ValueKey(level.id),
-                  level: level,
-                  isActive: isActive,
-                  isRecommended: level.id == recommendedId,
-                  onTap:
-                      opening || level.completed ? null : () => onLevel(level),
-                );
-              },
-            );
-          }),
-          const SizedBox(height: 13),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            _CircleArrow(
-              icon: Icons.chevron_left_rounded,
-              enabled: page > 0,
-              onTap: () => onPage(page - 1),
-            ),
-            Expanded(
-                child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var index = 0; index < pageCount; index++)
-                  if (pageCount <= 7 ||
-                      index == page ||
-                      (index - page).abs() <= 1) ...[
-                    GestureDetector(
-                      onTap: () => onPage(index),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: index == page ? 13 : 9,
-                        height: index == page ? 13 : 9,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: index == page
-                              ? const Color(0xFFFFCC28)
-                              : const Color(0xFFC9A3F5),
-                        ),
-                      ),
-                    ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: _catalogTitleStyle),
+                    if (total > 0) ...[
+                      const SizedBox(height: 6),
+                      PrufaniCatalogProgress(completed: completed, total: total),
+                    ],
                   ],
-                if (pageCount > 7)
-                  Text(' ${page + 1}/$pageCount',
-                      style: const TextStyle(
-                          fontSize: 11, color: PrufaniColors.primaryDark)),
-              ],
-            )),
-            _CircleArrow(
-              icon: Icons.chevron_right_rounded,
-              enabled: page < pageCount - 1,
-              onTap: () => onPage(page + 1),
-            ),
-          ]),
-        ]),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
 }
 
-class _CircleArrow extends StatelessWidget {
-  const _CircleArrow(
-      {required this.icon, required this.enabled, required this.onTap});
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onTap;
+class _LevelBoard extends StatelessWidget {
+  const _LevelBoard({
+    required this.levels,
+    required this.recommendedId,
+    required this.recommendedTile,
+    required this.resuming,
+    required this.opening,
+    required this.lives,
+    required this.onLevel,
+  });
+
+  final List<LevelSummary> levels;
+  final String? recommendedId;
+  final GlobalKey recommendedTile;
+  final bool resuming;
+  final bool opening;
+  final int? lives;
+  final ValueChanged<LevelSummary> onLevel;
+
+  PrufaniLevelTileStatus _status(LevelSummary level) => switch (level) {
+        _ when level.completed => PrufaniLevelTileStatus.completed,
+        _ when level.id != recommendedId => PrufaniLevelTileStatus.locked,
+        _ when lives == null => PrufaniLevelTileStatus.unavailable,
+        _ when lives! <= 0 => PrufaniLevelTileStatus.noLives,
+        _ when resuming => PrufaniLevelTileStatus.resume,
+        _ => PrufaniLevelTileStatus.ready,
+      };
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: const Color(0xFFFFFFFF),
-        shape: const CircleBorder(),
-        child: IconButton(
-          onPressed: enabled ? onTap : null,
-          icon: Icon(icon),
-          color: PrufaniColors.primaryDark,
-          disabledColor: const Color(0xFFCCBBDC),
-          iconSize: 25,
-          tooltip: enabled ? 'Другая страница уровней' : 'Нет страниц',
-        ),
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 8.0;
+          final columns =
+              ((constraints.maxWidth + gap) / (52 + gap)).floor().clamp(1, 5);
+          final width =
+              ((constraints.maxWidth - gap * (columns - 1)) / columns)
+                  .floorToDouble();
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (final level in levels)
+                SizedBox(
+                  key: level.id == recommendedId ? recommendedTile : null,
+                  width: width,
+                  height: 62,
+                  child: PrufaniLevelTile(
+                    key: ValueKey(level.id),
+                    level: level,
+                    status: _status(level),
+                    onTap: !opening &&
+                            level.id == recommendedId &&
+                            (lives ?? 0) > 0
+                        ? () => onLevel(level)
+                        : null,
+                  ),
+                ),
+            ],
+          );
+        },
       );
 }
 
 class _LevelBottomAction extends StatelessWidget {
-  const _LevelBottomAction(
-      {required this.enabled, required this.active, required this.onTap});
-  final bool enabled;
-  final bool active;
+  const _LevelBottomAction(this.label, {this.detail, this.onTap});
+
+  final String label;
+  final String? detail;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 7),
-        child: SizedBox(
-          height: 59,
-          child: Material(
-            borderRadius: BorderRadius.circular(28),
-            color: enabled ? const Color(0xFFFFD62D) : const Color(0xFFE3D8E5),
-            elevation: enabled ? 3 : 0,
-            shadowColor: const Color(0x88683AC4),
-            child: InkWell(
-              onTap: enabled ? onTap : null,
-              borderRadius: BorderRadius.circular(28),
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.play_arrow_rounded,
-                    size: 27,
-                    color: enabled
-                        ? PrufaniColors.primaryDark
-                        : PrufaniColors.muted),
-                const SizedBox(width: 9),
-                Text(
-                    enabled
-                        ? (active ? 'Продолжить' : 'Играть')
-                        : 'Всё пройдено',
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: PrufaniColors.ink)),
-              ]),
-            ),
-          ),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 7),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (detail case final message?) ...[
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: PrufaniColors.primaryDark,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
+            if (onTap != null)
+              PrufaniPrimaryButton(label: label, onPressed: onTap)
+            else
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0E9F2),
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 13),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: PrufaniColors.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       );
 }

@@ -6,5 +6,6 @@ class StartOrResumeAttempt {
 
   const StartOrResumeAttempt(this.repository);
 
-  Future<PuzzleAttempt> call(String levelId) => repository.startOrResume(levelId);
+  Future<PuzzleAttempt> call(String levelId) =>
+      repository.startOrResume(levelId);
 }
