@@ -8,8 +8,14 @@ class SubmitLetter {
 
   const SubmitLetter(this.repository);
 
-  Future<LetterResult> call({required String attemptId,
-    required int position, required String letter, required String requestId}) =>
-      repository.submitLetter(attemptId: attemptId, position: position,
-        letter: letter, requestId: requestId);
+  Future<LetterResult> call(
+          {required String attemptId,
+          required int position,
+          required String letter,
+          required String requestId}) =>
+      repository.submitLetter(
+          attemptId: attemptId,
+          position: position,
+          letter: letter,
+          requestId: requestId);
 }

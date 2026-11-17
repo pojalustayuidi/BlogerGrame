@@ -6,12 +6,14 @@ import '../../../core/di/backend_providers.dart';
 import '../../../core/theme/prufani_theme.dart';
 import '../../economy/domain/economy_models.dart';
 import '../../game/domain/game_models.dart';
+import '../../game/presentation/game_screen.dart';
 import '../../home/presentation/home_providers.dart';
 import '../../home/presentation/home_sheets.dart';
 import '../../home/presentation/home_widgets.dart';
 import '../domain/catalog_models.dart';
 import 'catalog_providers.dart';
 import 'catalog_widgets.dart';
+import 'catalog_access_rules.dart';
 
 /// These are the *same* routes as Patch 04, redesigned in-place.
 Future<void> openPrufaniCategoriesPage(BuildContext context) =>
@@ -203,8 +205,25 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
   Future<void> _openLevel(
       LevelSummary level, PuzzleAttempt? knownAttempt) async {
     if (_opening || level.completed) return;
+    final available =
+        ref.read(catalogLevelsProvider(widget.categorySlug)).asData?.value;
+    if (available == null ||
+        !mayStartLevel(level: level, levels: available, lives: 1)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Сначала пройди предыдущий уровень.')));
+      return;
+    }
     setState(() => _opening = true);
     try {
+      final currentWallet = await ref.read(economyRepositoryProvider).wallet();
+      if (currentWallet.lives <= 0) {
+        if (!mounted) return;
+        ref.invalidate(homeOverviewProvider);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content:
+                Text('Нет жизней. Дождись восстановления или купи жизнь.')));
+        return;
+      }
       final game = ref.read(gameRepositoryProvider);
       final start = ref.read(startOrResumeAttemptProvider);
       final auth = ref.read(authRepositoryProvider);
@@ -218,7 +237,11 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
       await store.save(playerId, attempt);
       if (!mounted) return;
       ref.invalidate(homeOverviewProvider);
-      await showPrufaniAttempt(context, attempt);
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => PrufaniGameScreen(initialAttempt: attempt),
+        ),
+      );
       if (mounted) await _refresh();
     } catch (error) {
       if (!mounted) return;
@@ -288,7 +311,7 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
       bottomAction: _LevelBottomAction(
         active: matchingAttempt != null &&
             selectedLevel?.id == matchingAttempt.levelId,
-        enabled: !_opening && selectedLevel != null,
+        enabled: !_opening && selectedLevel != null && (wallet?.lives ?? 0) > 0,
         onTap: selectedLevel == null
             ? null
             : () => _openLevel(
@@ -340,6 +363,7 @@ class _PrufaniLevelsPageState extends ConsumerState<PrufaniLevelsPage> {
                       recommendedId: selectedLevel?.id,
                       activeAttempt: matchingAttempt,
                       opening: _opening,
+                      availableLives: wallet?.lives ?? 0,
                       onPage: (next) => setState(() => _chosenPage = next),
                       onLevel: (level) => _openLevel(
                         level,
@@ -682,6 +706,7 @@ class _LevelBoard extends StatelessWidget {
       required this.recommendedId,
       required this.activeAttempt,
       required this.opening,
+      required this.availableLives,
       required this.onPage,
       required this.onLevel});
   final List<LevelSummary> levels;
@@ -690,6 +715,7 @@ class _LevelBoard extends StatelessWidget {
   final String? recommendedId;
   final PuzzleAttempt? activeAttempt;
   final bool opening;
+  final int availableLives;
   final ValueChanged<int> onPage;
   final ValueChanged<LevelSummary> onLevel;
 
@@ -723,8 +749,12 @@ class _LevelBoard extends StatelessWidget {
                   level: level,
                   isActive: isActive,
                   isRecommended: level.id == recommendedId,
-                  onTap:
-                      opening || level.completed ? null : () => onLevel(level),
+                  onTap: opening ||
+                          level.completed ||
+                          level.id != recommendedId ||
+                          availableLives <= 0
+                      ? null
+                      : () => onLevel(level),
                 );
               },
             );

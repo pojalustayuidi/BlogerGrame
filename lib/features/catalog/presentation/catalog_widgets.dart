@@ -243,7 +243,9 @@ class PrufaniLevelTile extends StatelessWidget {
         ? const [Color(0xFFAA66FA), Color(0xFF682CCA)]
         : current
             ? const [Color(0xFFFFEF79), Color(0xFFFFBE2C)]
-            : const [Color(0xFFFFFBFF), Color(0xFFE9D6FA)];
+            : onTap == null
+                ? const [Color(0xFFEAE5EF), Color(0xFFDAD4E2)]
+                : const [Color(0xFFFFFBFF), Color(0xFFE9D6FA)];
     final ink = complete ? Colors.white : PrufaniColors.primaryDark;
     return Semantics(
       label:
@@ -307,6 +309,12 @@ class PrufaniLevelTile extends StatelessWidget {
                   ]),
                 ),
               ),
+              if (!complete && !current && onTap == null)
+                const Positioned(
+                    top: 3,
+                    right: 3,
+                    child: Icon(Icons.lock_rounded,
+                        size: 18, color: PrufaniColors.primaryDark)),
               if (complete)
                 const Positioned(
                     top: 2,

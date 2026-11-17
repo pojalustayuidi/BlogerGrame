@@ -473,7 +473,7 @@ class PrufaniProgressCard extends StatelessWidget {
                 label: overview.categoryFinished || overview.totalCount == 0
                     ? 'Выбрать пак'
                     : overview.primaryActionLabel,
-                onPressed: onPrimaryAction,
+                onPressed: overview.wallet.lives > 0 ? onPrimaryAction : null,
               ),
             ),
           ]),
