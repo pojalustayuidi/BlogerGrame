@@ -54,4 +54,4 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/ava3.png"
+  image_path: "assets/prufani/brand/app_icon_approved_1024.png"

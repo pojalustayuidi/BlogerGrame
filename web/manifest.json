@@ -1,11 +1,11 @@
 {
-    "name": "blogergrame",
-    "short_name": "blogergrame",
+    "name": "ПРУФАНИ!",
+    "short_name": "ПРУФАНИ!",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FDF7F5",
+    "theme_color": "#7535DB",
+    "description": "ПРУФАНИ! — игра-криптограмма с цитатами блогеров и стримеров.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
